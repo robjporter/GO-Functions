@@ -1,0 +1,3 @@
+[submodule "kingpin"]
+	path = kingpin
+	url = https://github.com/alecthomas/kingpin.git
