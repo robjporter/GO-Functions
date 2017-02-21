@@ -4,3 +4,6 @@
 [submodule "term"]
 	path = term
 	url = https://github.com/pkg/term.git
+[submodule "viper"]
+	path = viper
+	url = https://github.com/spf13/viper.git
