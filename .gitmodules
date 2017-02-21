@@ -1,3 +1,6 @@
 [submodule "kingpin"]
 	path = kingpin
 	url = https://github.com/alecthomas/kingpin.git
+[submodule "term"]
+	path = term
+	url = https://github.com/pkg/term.git
