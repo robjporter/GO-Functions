@@ -7,3 +7,6 @@
 [submodule "viper"]
 	path = viper
 	url = https://github.com/spf13/viper.git
+[submodule "yaml"]
+	path = yaml
+	url = https://github.com/go-yaml/yaml.git
