@@ -9,6 +9,7 @@ import (
 	"io"
 	"os"
 	"strings"
+	"time"
 )
 
 var (
@@ -32,6 +33,10 @@ func Exists(path string) bool {
 		return false
 	}
 	return true
+}
+
+func MakeTimestamp() int64 {
+	return time.Now().UnixNano() / int64(time.Millisecond)
 }
 
 func GetFilenameNoExtension(s string) string {
