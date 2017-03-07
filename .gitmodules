@@ -10,6 +10,3 @@
 [submodule "yaml"]
 	path = yaml
 	url = https://github.com/go-yaml/yaml.git
-[submodule "now"]
-	path = now
-	url = https://github.com/jinzhu/now
