@@ -2,11 +2,13 @@ package now
 
 import (
 	"errors"
+	"fmt"
 	"regexp"
 	"time"
 )
 
 func (now *Now) Month() string {
+	fmt.Println(now.Month())
 	return now.Month()
 }
 

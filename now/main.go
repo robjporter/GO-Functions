@@ -24,10 +24,6 @@ func New(t time.Time) *Now {
 	return &Now{t}
 }
 
-func CurrentMonthName() string {
-	return time.Now().Month().String()
-}
-
 func BeginningOfMinute() time.Time {
 	return New(time.Now()).BeginningOfMinute()
 }
