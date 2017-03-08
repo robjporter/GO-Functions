@@ -10,3 +10,6 @@
 [submodule "yaml"]
 	path = yaml
 	url = https://github.com/go-yaml/yaml.git
+[submodule "logrus"]
+	path = logrus
+	url = https://github.com/sirupsen/logrus
