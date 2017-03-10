@@ -13,3 +13,9 @@
 [submodule "logrus"]
 	path = logrus
 	url = https://github.com/sirupsen/logrus
+[submodule "jmespath"]
+	path = jmespath
+	url = https://github.com/jmespath/go-jmespath
+[submodule "etree"]
+	path = etree
+	url = https://github.com/beevik/etree
