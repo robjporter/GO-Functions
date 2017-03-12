@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"regexp"
+	"strconv"
 	"time"
 )
 
@@ -124,7 +125,8 @@ func parseWithFormat(str string) (t time.Time, err error) {
 func (now *Now) Parse(strs ...string) (t time.Time, err error) {
 	var setCurrentTime bool
 	parseTime := []int{}
-	currentTime := []int{now.Second(), now.Minute(), now.Hour(), now.Day(), int(now.Month()), now.Year()}
+	month, _ := strconv.Atoi(now.Month())
+	currentTime := []int{now.Second(), now.Minute(), now.Hour(), now.Day(), month, now.Year()}
 	currentLocation := now.Location()
 
 	for _, str := range strs {
