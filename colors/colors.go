@@ -78,7 +78,6 @@ func getColor(code string) string {
 }
 
 func getBgColor(code string) string {
-	//return fmt.Sprintf("\033[4%sm", code)
 	return fmt.Sprintf("\u001b[4%sm", code)
 }
 
@@ -100,6 +99,172 @@ func Background(str string, color string) string {
 
 func Color(str string, color string) string {
 	return fmt.Sprintf("%s%s%s", getColor(color), str, RESET)
+}
+
+func Black(str string) string {
+	return fmt.Sprintf("%s%s%s", getColor(BLACK), str, RESET)
+}
+
+func BrightBlack(str string) string {
+	return fmt.Sprintf("%s%s%s", getColor(BRIGHTBLACK), str, RESET)
+}
+
+func Red(str string) string {
+	return fmt.Sprintf("%s%s%s", getColor(RED), str, RESET)
+}
+
+func BrightRed(str string) string {
+	return fmt.Sprintf("%s%s%s", getColor(BRIGHTRED), str, RESET)
+}
+
+func Green(str string) string {
+	return fmt.Sprintf("%s%s%s", getColor(GREEN), str, RESET)
+}
+
+func BrightGreen(str string) string {
+	return fmt.Sprintf("%s%s%s", getColor(BRIGHTGREEN), str, RESET)
+}
+
+func Yellow(str string) string {
+	return fmt.Sprintf("%s%s%s", getColor(YELLOW), str, RESET)
+}
+
+func BrightYellow(str string) string {
+	return fmt.Sprintf("%s%s%s", getColor(BRIGHTYELLOW), str, RESET)
+}
+
+func Blue(str string) string {
+	return fmt.Sprintf("%s%s%s", getColor(BLUE), str, RESET)
+}
+
+func BrightBlue(str string) string {
+	return fmt.Sprintf("%s%s%s", getColor(BRIGHTBLUE), str, RESET)
+}
+
+func Magenta(str string) string {
+	return fmt.Sprintf("%s%s%s", getColor(MAGENTA), str, RESET)
+}
+
+func BrightMagenta(str string) string {
+	return fmt.Sprintf("%s%s%s", getColor(BRIGHTMAGENTA), str, RESET)
+}
+
+func Cyan(str string) string {
+	return fmt.Sprintf("%s%s%s", getColor(CYAN), str, RESET)
+}
+
+func BrightCyan(str string) string {
+	return fmt.Sprintf("%s%s%s", getColor(BRIGHTCYAN), str, RESET)
+}
+
+func White(str string) string {
+	return fmt.Sprintf("%s%s%s", getColor(WHITE), str, RESET)
+}
+
+func BrightWhite(str string) string {
+	return fmt.Sprintf("%s%s%s", getColor(BRIGHTWHITE), str, RESET)
+}
+
+func printBox(backgroundCode string, fontCode string, str string) string {
+	return fmt.Sprintf("%s%s\n\n %s \n%s", backgroundCode, fontCode, str, RESET)
+}
+
+func printSmallBox(backgroundCode string, fontCode string, str string) string {
+	return fmt.Sprintf("%s%s\n%s%s", backgroundCode, fontCode, str, RESET)
+}
+
+func BlackPanel(str string) string {
+	return printBox(getBgColor(BRIGHTBLACK), getColor(BRIGHTWHITE), str)
+}
+
+func RedPanel(str string) string {
+	return printBox(getBgColor(RED), getColor(BRIGHTWHITE), str)
+}
+
+func GreenPanel(str string) string {
+	return printBox(getBgColor(GREEN), getColor(BRIGHTWHITE), str)
+}
+
+func YellowPanel(str string) string {
+	return printBox(getBgColor(YELLOW), getColor(BRIGHTWHITE), str)
+}
+
+func BluePanel(str string) string {
+	return printBox(getBgColor(BRIGHTBLUE), getColor(BRIGHTWHITE), str)
+}
+
+func MagentaPanel(str string) string {
+	return printBox(getBgColor(MAGENTA), getColor(BRIGHTWHITE), str)
+}
+
+func CyanPanel(str string) string {
+	return printBox(getBgColor(CYAN), getColor(BRIGHTWHITE), str)
+}
+
+func WhitePanel(str string) string {
+	return printBox(getBgColor(WHITE), getColor(BRIGHTWHITE), str)
+}
+
+func BlackSmallPanel(str string) string {
+	return printSmallBox(getBgColor(BRIGHTBLACK), getColor(BRIGHTWHITE), str)
+}
+
+func RedSmallPanel(str string) string {
+	return printSmallBox(getBgColor(RED), getColor(BRIGHTWHITE), str)
+}
+
+func GreenSmallPanel(str string) string {
+	return printSmallBox(getBgColor(GREEN), getColor(BRIGHTWHITE), str)
+}
+
+func YellowSmallPanel(str string) string {
+	return printSmallBox(getBgColor(YELLOW), getColor(BRIGHTWHITE), str)
+}
+
+func BlueSmallPanel(str string) string {
+	return printSmallBox(getBgColor(BRIGHTBLUE), getColor(BRIGHTWHITE), str)
+}
+
+func MagentaSmallPanel(str string) string {
+	return printSmallBox(getBgColor(MAGENTA), getColor(BRIGHTWHITE), str)
+}
+
+func CyanSmallPanel(str string) string {
+	return printSmallBox(getBgColor(CYAN), getColor(BRIGHTWHITE), str)
+}
+
+func WhiteSmallPanel(str string) string {
+	return printSmallBox(getBgColor(WHITE), getColor(BRIGHTWHITE), str)
+}
+
+func Title(str string) string {
+	str = strings.TrimSpace(str)
+	strr := getColor(BRIGHTWHITE) + str + RESET + "\n"
+	strr += getColor(WHITE) + strings.Repeat("=", len(str)) + RESET
+	return strr
+}
+
+func CustomTitle(str string, titleColor string, underlineColor string) string {
+	str = strings.TrimSpace(str)
+	strr := getColor(titleColor) + str + RESET + "\n"
+	strr += getColor(underlineColor) + strings.Repeat("=", len(str)) + RESET
+	return strr
+}
+
+func Info(str string) string {
+	return BrightBlue(str)
+}
+
+func Success(str string) string {
+	return Green(str)
+}
+
+func Warning(str string) string {
+	return BrightRed(str)
+}
+
+func Error(str string) string {
+	return Red(str)
 }
 
 func PrintQColor(foreground int, background int, str string) {
