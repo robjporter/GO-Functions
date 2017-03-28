@@ -39,12 +39,11 @@ func Exists(path string) bool {
 }
 
 func RemoveFileIfExist(filename string) error {
-	if !Exists(filename) {
-		continue
-	}
-	err := os.Remove(filename)
-	if err != nil {
-		return err
+	if Exists(filename) {
+		err := os.Remove(filename)
+		if err != nil {
+			return err
+		}
 	}
 	return nil
 }
