@@ -633,3 +633,43 @@ func ToUint(valuea ...interface{}) uint64 {
 		return uint64(i + 0.5)
 	}
 }
+
+func IsInt(input interface{}) bool {
+	switch input.(type) {
+	case int, int8, int16, int32, int64, uint, uint8, uint16, uint32, uint64:
+		return true
+	}
+	return false
+}
+
+func IsFloat(input interface{}) bool {
+	switch input.(type) {
+	case float32, float64:
+		return true
+	}
+	return false
+}
+
+func IsBool(input interface{}) bool {
+	switch input.(type) {
+	case bool:
+		return true
+	}
+	return false
+}
+
+func IsString(input interface{}) bool {
+	switch input.(type) {
+	case string:
+		return true
+	}
+	return false
+}
+
+func IsTime(input interface{}) bool {
+	switch input.(type) {
+	case time.Time:
+		return true
+	}
+	return false
+}

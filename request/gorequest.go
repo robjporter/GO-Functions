@@ -29,6 +29,7 @@ import (
 	"path/filepath"
 
 	"github.com/moul/http2curl"
+	"github.com/robjporter/go-functions/vcr/recorder"
 	"golang.org/x/net/publicsuffix"
 )
 
@@ -499,6 +500,10 @@ func (s *SuperAgent) Proxy(proxyUrl string) *SuperAgent {
 		s.Transport.Proxy = http.ProxyURL(parsedProxyUrl)
 	}
 	return s
+}
+
+func (s *SuperAgent) SetRecorder(r *recorder.Recorder) {
+	s.Client.Transport = r
 }
 
 // RedirectPolicy accepts a function to define how to handle redirects. If the

@@ -38,6 +38,27 @@ func Exists(path string) bool {
 	return true
 }
 
+func RemoveFileIfExist(filename string) error {
+	if !Exists(filename) {
+		continue
+	}
+	err := os.Remove(filename)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func CreateDirIfNotExist(dir string) error {
+	if !Exists(dir) {
+		err := os.Mkdir(dir, 0744)
+		if err != nil {
+			return fmt.Errorf("Failed to create dir %v %v", dir, err)
+		}
+	}
+	return nil
+}
+
 func MakeTimestamp() int64 {
 	return time.Now().UnixNano() / int64(time.Millisecond)
 }
