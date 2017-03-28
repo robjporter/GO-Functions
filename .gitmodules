@@ -19,3 +19,6 @@
 [submodule "etree"]
 	path = etree
 	url = https://github.com/beevik/etree
+[submodule "gorequest"]
+	path = gorequest
+	url = https://github.com/parnurzeal/gorequest
