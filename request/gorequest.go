@@ -29,6 +29,7 @@ import (
 	"path/filepath"
 
 	"github.com/moul/http2curl"
+	"github.com/robjporter/go-functions/as"
 	"github.com/robjporter/go-functions/vcr/recorder"
 	"golang.org/x/net/publicsuffix"
 )
@@ -70,7 +71,10 @@ type SuperAgent struct {
 	CurlCommand       bool
 	logger            *log.Logger
 	Record            bool
+	RecordRefresh     bool
+	RecordFilename    string
 	MyRecorder        *recorder.Recorder
+	ResponseTime      string
 	Retryable         struct {
 		RetryableStatus []int
 		RetryerTime     time.Duration
@@ -108,11 +112,15 @@ func New() *SuperAgent {
 		BasicAuth:         struct{ Username, Password string }{},
 		Debug:             debug,
 		CurlCommand:       false,
+		Record:            false,
+		RecordRefresh:     false,
+		ResponseTime:      "",
+		RecordFilename:    "fixtures/demo",
 		logger:            log.New(os.Stderr, "[gorequest]", log.LstdFlags),
 	}
 	// disable keep alives by default, see this issue https://github.com/parnurzeal/gorequest/issues/75
 	s.Transport.DisableKeepAlives = true
-	s.MyRecorder, _ = recorder.New("fixtures/test")
+	s.MyRecorder = nil
 	return s
 }
 
@@ -147,6 +155,7 @@ func (s *SuperAgent) ClearSuperAgent() {
 	s.RawString = ""
 	s.ForceType = ""
 	s.TargetType = "json"
+	s.ResponseTime = ""
 	s.Cookies = make([]*http.Cookie, 0)
 	s.Errors = nil
 }
@@ -515,8 +524,21 @@ func (s *SuperAgent) Terminate() *SuperAgent {
 	return s
 }
 
+func (s *SuperAgent) SetRecorderRefresh(refresh bool) *SuperAgent {
+	s.RecordRefresh = refresh
+	if s.RecordRefresh {
+		_, err := os.Stat(s.RecordFilename + ".yaml")
+		if err == nil {
+			os.Remove(s.RecordFilename + ".yaml")
+			s.SetRecorderPath(s.RecordFilename)
+		}
+	}
+	return s
+}
+
 func (s *SuperAgent) SetRecorderPath(filename string) *SuperAgent {
 	s.MyRecorder, _ = recorder.New(filename)
+	s.RecordFilename = filename
 	return s
 }
 
@@ -531,6 +553,7 @@ func (s *SuperAgent) GetRecorderMode() string {
 func (s *SuperAgent) SetRecorder(status bool) *SuperAgent {
 	if status {
 		s.Record = status
+		s.MyRecorder, _ = recorder.New(s.RecordFilename)
 	} else {
 		s.MyRecorder = nil
 		s.Record = status
@@ -1043,6 +1066,9 @@ func (s *SuperAgent) getResponseBytes() (Response, []byte, []error) {
 		err  error
 		resp Response
 	)
+	// roporter: Added to return request response time
+	start := time.Now()
+
 	// check whether there is an error. if yes, return all errors
 	if len(s.Errors) != 0 {
 		return nil, nil, s.Errors
@@ -1131,6 +1157,11 @@ func (s *SuperAgent) getResponseBytes() (Response, []byte, []error) {
 	// Reset resp.Body so it can be use again
 	resp.Body = ioutil.NopCloser(bytes.NewBuffer(body))
 
+	if s.GetRecorderMode() == "Replaying" {
+		s.ResponseTime = as.ToString(time.Since(start).Nanoseconds()/int64(time.Microsecond)) + "μs"
+	} else {
+		s.ResponseTime = as.ToString(time.Since(start).Nanoseconds()/int64(time.Millisecond)) + "ms"
+	}
 	return resp, body, nil
 }
 
