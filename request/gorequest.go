@@ -69,6 +69,8 @@ type SuperAgent struct {
 	Debug             bool
 	CurlCommand       bool
 	logger            *log.Logger
+	Record            bool
+	MyRecorder        *recorder.Recorder
 	Retryable         struct {
 		RetryableStatus []int
 		RetryerTime     time.Duration
@@ -110,6 +112,7 @@ func New() *SuperAgent {
 	}
 	// disable keep alives by default, see this issue https://github.com/parnurzeal/gorequest/issues/75
 	s.Transport.DisableKeepAlives = true
+	s.MyRecorder, _ = recorder.New("fixtures/test")
 	return s
 }
 
@@ -502,9 +505,40 @@ func (s *SuperAgent) Proxy(proxyUrl string) *SuperAgent {
 	return s
 }
 
-func (s *SuperAgent) SetRecorder(r *recorder.Recorder) {
-	s.Client.Transport = r
+//roporter/////////////////////////////////////////////////////////////////////////
+
+func (s *SuperAgent) Terminate() *SuperAgent {
+	if s.Record {
+		s.MyRecorder.Stop()
+	}
+	s.ClearSuperAgent()
+	return s
 }
+
+func (s *SuperAgent) SetRecorderPath(filename string) *SuperAgent {
+	s.MyRecorder, _ = recorder.New(filename)
+	return s
+}
+
+func (s *SuperAgent) GetRecorderMode() string {
+	if s.MyRecorder != nil {
+		return s.MyRecorder.GetMode()
+	} else {
+		return "Not Active"
+	}
+}
+
+func (s *SuperAgent) SetRecorder(status bool) *SuperAgent {
+	if status {
+		s.Record = status
+	} else {
+		s.MyRecorder = nil
+		s.Record = status
+	}
+	return s
+}
+
+//roporter/////////////////////////////////////////////////////////////////////////
 
 // RedirectPolicy accepts a function to define how to handle redirects. If the
 // policy function returns an error, the next Request is not made and the previous
@@ -1037,6 +1071,15 @@ func (s *SuperAgent) getResponseBytes() (Response, []byte, []error) {
 	if err != nil {
 		s.Errors = append(s.Errors, err)
 		return nil, nil, s.Errors
+	}
+
+	// roporter :- Fix to incorporate the VCR functionality
+	if s.Record {
+		if s.Transport != nil && s.MyRecorder != nil {
+			s.MyRecorder.SetTransport(s.Transport)
+			s.Client.Transport = s.MyRecorder
+			DisableTransportSwap = true
+		}
 	}
 
 	// Set Transport
