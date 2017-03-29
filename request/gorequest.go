@@ -542,6 +542,18 @@ func (s *SuperAgent) SetRecorderPath(filename string) *SuperAgent {
 	return s
 }
 
+func (s *SuperAgent) SetDefaults() *SuperAgent {
+	s.OverrideDefaults(3, 5, 2, true)
+	return s
+}
+
+func (s *SuperAgent) OverrideDefaults(retryAttempts int, retryTimeout int, timeout int, insecure bool) *SuperAgent {
+	s.Retry(retryAttempts, time.Duration(retryTimeout)*time.Second, http.StatusBadRequest, http.StatusInternalServerError)
+	s.Timeout(time.Duration(timeout) * time.Second)
+	s.TLSClientConfig(&tls.Config{InsecureSkipVerify: insecure})
+	return s
+}
+
 func (s *SuperAgent) GetRecorderMode() string {
 	if s.MyRecorder != nil {
 		return s.MyRecorder.GetMode()
