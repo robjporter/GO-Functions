@@ -73,6 +73,7 @@ type SuperAgent struct {
 	Record            bool
 	RecordRefresh     bool
 	RecordFilename    string
+	RequestCounter    int
 	MyRecorder        *recorder.Recorder
 	ResponseTime      string
 	Retryable         struct {
@@ -114,6 +115,7 @@ func New() *SuperAgent {
 		CurlCommand:       false,
 		Record:            false,
 		RecordRefresh:     false,
+		RequestCounter:    0,
 		ResponseTime:      "",
 		RecordFilename:    "fixtures/demo",
 		logger:            log.New(os.Stderr, "[gorequest]", log.LstdFlags),
@@ -542,8 +544,13 @@ func (s *SuperAgent) SetRecorderPath(filename string) *SuperAgent {
 	return s
 }
 
-func (s *SuperAgent) SetDefaults() *SuperAgent {
+func (s *SuperAgent) SetInsecureDefaults() *SuperAgent {
 	s.OverrideDefaults(3, 5, 2, true)
+	return s
+}
+
+func (s *SuperAgent) SetSecureDefaults() *SuperAgent {
+	s.OverrideDefaults(3, 5, 2, false)
 	return s
 }
 
@@ -1006,6 +1013,9 @@ func (s *SuperAgent) End(callback ...func(response Response, body string, errs [
 
 	resp, body, errs := s.EndBytes(bytesCallback...)
 	bodyString := string(body)
+
+	//roporter - Add counter
+	s.RequestCounter++
 
 	return resp, bodyString, errs
 }

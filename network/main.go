@@ -5,6 +5,15 @@ import (
 	"strconv"
 )
 
+func IsIPAddress(ip string) bool {
+	test := net.ParseIP(ip)
+	if test.To4() == nil {
+		return false
+	} else {
+		return true
+	}
+}
+
 func GetMainIP() []string {
 	ip := []string{}
 	list, err := net.Interfaces()
