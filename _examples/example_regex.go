@@ -1,7 +1,7 @@
 package main
 
 import (
-	"./regex"
+	"../regex"
 	"fmt"
 )
 
@@ -13,10 +13,12 @@ func main() {
 	text += "The web server has a mac address of 00:11:22:33:44:55, it costs $22.22 a month, which is about £18."
 	text += "This service started on the 28/04/2008 @ 12:00 or 13:30 and is located at SS2 2SS."
 	text += "this is for the custom test: abb and abbbb"
+	text += " 2.2(8g)  3.1(2f)  2.1(3l)  3.0(2f)"
 
 	password1 := "A2345B"
 	password2 := "A2345!CD"
 	password3 := "A2345B"
+	ucs := "2.2(8g)"
 
 	fmt.Println("IP v4:          >", regex.IP(text))
 	fmt.Println("IP v4 CIDR:     >", regex.IPCidr(text))
@@ -35,6 +37,8 @@ func main() {
 	fmt.Println("PASSWORD LOW:   >", regex.PasswordLow(password1))
 	fmt.Println("PASSWORD MED:   >", regex.PasswordMedium(password2))
 	fmt.Println("PASSWORD HIG:   >", regex.PasswordHigh(password3))
+	fmt.Println("UCS VERSION:   >", regex.UCSVersion(text))
+	fmt.Println("UCS VERSION:   >", regex.UCSVersion(ucs))
 
 	name := "test"
 	custom := "ab{2,}"

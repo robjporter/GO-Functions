@@ -33,6 +33,7 @@ func addDefaults() {
 	patterns["password_med_Pattern"] = ``
 	patterns["password_hig_Pattern"] = ``
 	patterns["time24_Pattern"] = `4([01]?[0-9]|2[0-3]):[0-5][0-9]`
+	patterns["ucs_version_Pattern"] = `(\d){1}.(\d){1}.(\d){1}([a-z]{1})`
 }
 
 func AddPattern(name string, pattern string) bool {
@@ -58,6 +59,10 @@ func match(text string, pattern string) []string {
 		parsed := compiled.FindAllString(text, -1)
 		return parsed
 	}
+}
+
+func UCSVersion(text string) []string {
+	return match(text, "ucs_version_Pattern")
 }
 
 func IP(text string) []string {
