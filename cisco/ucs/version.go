@@ -118,19 +118,19 @@ func IsLatestReleaseTrain(train string) bool {
 }
 
 func GetSuggestedReleaseTrain(train string) string {
-	if isInSlice(releasesData, train) {
+	if isInSlice(suggestedData, train) {
 		return "This is a suggested release."
 	} else {
-		if len(releasesData) > 0 {
-			for i := 0; i < len(releasesData); i++ {
-				if getVersionMajor(releasesData[i]) == getVersionMajor(train) {
-					if getVersionMinor(releasesData[i]) == getVersionMinor(train) {
-						if getVersionRelease(releasesData[i]) == getVersionRelease(train) {
-							return strings.TrimSpace(releasesData[i])
+		if len(suggestedData) > 0 {
+			for i := 0; i < len(suggestedData); i++ {
+				if getVersionMajor(suggestedData[i]) == getVersionMajor(train) {
+					if getVersionMinor(suggestedData[i]) == getVersionMinor(train) {
+						if getVersionRelease(suggestedData[i]) == getVersionRelease(train) {
+							return strings.TrimSpace(suggestedData[i])
 						}
-						return strings.TrimSpace(releasesData[i])
+						return strings.TrimSpace(suggestedData[i])
 					}
-					return strings.TrimSpace(releasesData[i])
+					return strings.TrimSpace(suggestedData[i])
 				}
 			}
 		}
