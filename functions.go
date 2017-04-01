@@ -13,6 +13,8 @@ import (
 	"path/filepath"
 	"strings"
 	"time"
+
+	"github.com/robjporter/go-functions/as"
 )
 
 var (
@@ -94,7 +96,45 @@ func decodeBase64(s string) []byte {
 	return data
 }
 
+func RightPad2Len(s string, padStr string, overallLen int) string {
+	var padCountInt int
+	padCountInt = 1 + ((overallLen - len(padStr)) / len(padStr))
+	var retStr = s + strings.Repeat(padStr, padCountInt)
+	return retStr[:overallLen]
+}
+func LeftPad2Len(s string, padStr string, overallLen int) string {
+	var padCountInt int
+	padCountInt = 1 + ((overallLen - len(padStr)) / len(padStr))
+	var retStr = strings.Repeat(padStr, padCountInt) + s
+	return retStr[(len(retStr) - overallLen):]
+}
+
+func LeftPad(s string, padStr string, pLen int) string {
+	return strings.Repeat(padStr, pLen) + s
+}
+func RightPad(s string, padStr string, pLen int) string {
+	return s + strings.Repeat(padStr, pLen)
+}
+
+func bufferSecurityKey(key string) string {
+	if len(key) < 16 {
+		return RightPad2Len(key, "0", 16)
+	} else if len(key) > 16 && len(key) < 24 {
+		return RightPad2Len(key, "0", 24)
+	} else if len(key) > 24 && len(key) < 32 {
+		return RightPad2Len(key, "0", 32)
+	} else if len(key) > 32 {
+		return key[:31]
+	}
+	return key
+}
+
 func Encrypt(key, text []byte) string {
+	tmpKey := as.ToString(key)
+	if len(tmpKey) != 16 && len(tmpKey) != 24 && len(tmpKey) != 32 {
+		tmpKey = bufferSecurityKey(tmpKey)
+	}
+	key = []byte(tmpKey)
 	block, err := aes.NewCipher(key)
 	if err != nil {
 		panic(err)
@@ -110,6 +150,11 @@ func Encrypt(key, text []byte) string {
 }
 
 func Decrypt(key []byte, b64 string) string {
+	tmpKey := as.ToString(key)
+	if len(tmpKey) != 16 && len(tmpKey) != 24 && len(tmpKey) != 32 {
+		tmpKey = bufferSecurityKey(tmpKey)
+	}
+	key = []byte(tmpKey)
 	text := decodeBase64(b64)
 	block, err := aes.NewCipher(key)
 	if err != nil {
