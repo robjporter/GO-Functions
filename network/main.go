@@ -5,6 +5,15 @@ import (
 	"strconv"
 )
 
+var (
+	classAPrivate    = mustParseCIDR("10.0.0.0/8")
+	classBPrivate    = mustParseCIDR("172.16.0.0/12")
+	classCPrivate    = mustParseCIDR("192.168.0.0/16")
+	ipv6UniqueLocal  = mustParseCIDR("fc00::/7")
+	LoopbackIPv4CIDR = "127.0.0.0/8"
+	LoopbackIPv6CIDR = "::1/128"
+)
+
 func IsIPAddress(ip string) bool {
 	test := net.ParseIP(ip)
 	if test.To4() == nil {
@@ -12,6 +21,14 @@ func IsIPAddress(ip string) bool {
 	} else {
 		return true
 	}
+}
+
+func mustParseCIDR(s string) *net.IPNet {
+	_, net, err := net.ParseCIDR(s)
+	if err != nil {
+		panic(err)
+	}
+	return net
 }
 
 func GetMainIP() []string {

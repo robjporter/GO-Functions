@@ -28,10 +28,12 @@ func GetWebData() {
 	code := request.New()
 	resp, body, err := code.Get("https://software.cisco.com/download/release.html?mdfid=283612660&softwareid=283655658").End()
 	if resp.StatusCode == 200 && err == nil {
-		latestData = getReleasesFromContent(getLatestContent(body))
-		suggestedData = getReleasesFromContent(getSuggestedContent(body))
-		releasesData = getReleasesFromContent(getAllReleasesContent(body))
-		deferredData = getReleasesFromContent(getDeferredContent(body))
+		if body != "" {
+			latestData = getReleasesFromContent(getLatestContent(body))
+			suggestedData = getReleasesFromContent(getSuggestedContent(body))
+			releasesData = getReleasesFromContent(getAllReleasesContent(body))
+			deferredData = getReleasesFromContent(getDeferredContent(body))
+		}
 	}
 }
 
@@ -182,25 +184,37 @@ func ShowDeferredReleases() {
 func getLatestContent(body string) string {
 	latestPos := strings.Index(body, INDEX_POS_LATEST)
 	allPos := strings.Index(body, INDEX_POS_RELEASES)
-	return body[latestPos:allPos]
+	if latestPos > -1 && allPos > -1 {
+		return body[latestPos:allPos]
+	}
+	return ""
 }
 
 func getSuggestedContent(body string) string {
 	suggestedPos := strings.Index(body, INDEX_POS_SUGGESTED)
 	latestPos := strings.Index(body, INDEX_POS_LATEST)
-	return body[suggestedPos:latestPos]
+	if suggestedPos > -1 && latestPos > -1 {
+		return body[suggestedPos:latestPos]
+	}
+	return ""
 }
 
 func getAllReleasesContent(body string) string {
 	allPos := strings.Index(body, INDEX_POS_RELEASES)
 	deferredPos := strings.Index(body, INDEX_POS_DEFERRED)
-	return body[allPos:deferredPos]
+	if allPos > -1 && deferredPos > -1 {
+		return body[allPos:deferredPos]
+	}
+	return ""
 }
 
 func getDeferredContent(body string) string {
 	deferredPos := strings.Index(body, INDEX_POS_DEFERRED)
 	endPos := strings.Index(body, INDEX_POS_END)
-	return body[deferredPos:endPos]
+	if deferredPos > -1 && endPos > -1 {
+		return body[deferredPos:endPos]
+	}
+	return ""
 }
 
 func getReleasesFromContent(content string) []string {
