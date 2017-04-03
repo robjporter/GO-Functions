@@ -19,3 +19,6 @@
 [submodule "etree"]
 	path = etree
 	url = https://github.com/beevik/etree
+[submodule "hermes"]
+	path = hermes
+	url = https://github.com/matcornic/hermes
