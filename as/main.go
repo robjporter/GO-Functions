@@ -376,6 +376,46 @@ func ToFloat(valuea ...interface{}) float64 {
 	}
 }
 
+func ToFloat32(valuea ...interface{}) float32 {
+	value := valuea[0]
+	switch val := value.(type) {
+	case int:
+		return float32(val)
+	case int8:
+		return float32(val)
+	case int16:
+		return float32(val)
+	case int32:
+		return float32(val)
+	case int64:
+		return float32(val)
+	case uint:
+		return float32(val)
+	case uint8:
+		return float32(val)
+	case uint16:
+		return float32(val)
+	case uint32:
+		return float32(val)
+	case uint64:
+		return float32(val)
+	case float32:
+		return float32(val)
+	case float64:
+		return float32(val)
+	case time.Time:
+		return float32(val.Unix())
+	case bool:
+		if val == true {
+			return float32(1)
+		}
+		return float32(0)
+	default:
+		f, _ := strconv.ParseFloat(ToString(value), 32)
+		return float32(f)
+	}
+}
+
 func ToFloatFromXString(valuea ...string) float64 {
 	value := valuea[0]
 	value = strings.Trim(value, "\t\n\r¢§$€ ")
@@ -414,43 +454,43 @@ func ToFloatFromXString(valuea ...string) float64 {
 	return float64(float)
 }
 
-func ToInt(valuea ...interface{}) int64 {
+func ToInt(valuea ...interface{}) int {
 	value := valuea[0]
 	switch val := value.(type) {
 	case int:
-		return int64(val)
+		return int(val)
 	case int8:
-		return int64(val)
+		return int(val)
 	case int16:
-		return int64(val)
+		return int(val)
 	case int32:
-		return int64(val)
+		return int(val)
 	case int64:
-		return int64(val)
+		return int(val)
 	case uint:
-		return int64(val)
+		return int(val)
 	case uint8:
-		return int64(val)
+		return int(val)
 	case uint16:
-		return int64(val)
+		return int(val)
 	case uint32:
-		return int64(val)
+		return int(val)
 	case uint64:
-		return int64(val)
+		return int(val)
 	case float32:
-		return int64(val + 0.5)
+		return int(val + 0.5)
 	case float64:
-		return int64(val + 0.5)
+		return int(val + 0.5)
 	case time.Time:
-		return int64(val.Unix())
+		return int(val.Unix())
 	case bool:
 		if val == true {
-			return int64(1)
+			return int(1)
 		}
-		return int64(0)
+		return int(0)
 	default:
 		i, _ := strconv.ParseFloat(ToString(value), 64)
-		return int64(i + 0.5)
+		return int(i + 0.5)
 	}
 }
 
@@ -531,6 +571,86 @@ func ToInt32(valuea ...interface{}) int32 {
 	default:
 		i, _ := strconv.ParseFloat(ToString(value), 32)
 		return int32(i + 0.5)
+	}
+}
+
+func ToInt16(valuea ...interface{}) int16 {
+	value := valuea[0]
+	switch val := value.(type) {
+	case int:
+		return int16(val)
+	case int8:
+		return int16(val)
+	case int16:
+		return int16(val)
+	case int32:
+		return int16(val)
+	case int64:
+		return int16(val)
+	case uint:
+		return int16(val)
+	case uint8:
+		return int16(val)
+	case uint16:
+		return int16(val)
+	case uint32:
+		return int16(val)
+	case uint64:
+		return int16(val)
+	case float32:
+		return int16(val + 0.5)
+	case float64:
+		return int16(val + 0.5)
+	case time.Time:
+		return int16(val.Unix())
+	case bool:
+		if val == true {
+			return int16(1)
+		}
+		return int16(0)
+	default:
+		i, _ := strconv.ParseFloat(ToString(value), 16)
+		return int16(i + 0.5)
+	}
+}
+
+func ToInt8(valuea ...interface{}) int8 {
+	value := valuea[0]
+	switch val := value.(type) {
+	case int:
+		return int8(val)
+	case int8:
+		return int8(val)
+	case int16:
+		return int8(val)
+	case int32:
+		return int8(val)
+	case int64:
+		return int8(val)
+	case uint:
+		return int8(val)
+	case uint8:
+		return int8(val)
+	case uint16:
+		return int8(val)
+	case uint32:
+		return int8(val)
+	case uint64:
+		return int8(val)
+	case float32:
+		return int8(val + 0.5)
+	case float64:
+		return int8(val + 0.5)
+	case time.Time:
+		return int8(val.Unix())
+	case bool:
+		if val == true {
+			return int8(1)
+		}
+		return int8(0)
+	default:
+		i, _ := strconv.ParseFloat(ToString(value), 8)
+		return int8(i + 0.5)
 	}
 }
 
@@ -672,4 +792,17 @@ func IsTime(input interface{}) bool {
 		return true
 	}
 	return false
+}
+
+func IsNillable(input interface{}) bool {
+	switch reflect.TypeOf(input).Kind() {
+	case reflect.Chan:
+		return true
+	case reflect.Slice:
+		return true
+	case reflect.UnsafePointer:
+		return true
+	default:
+		return false
+	}
 }
