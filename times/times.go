@@ -53,6 +53,42 @@ func New(year, month, day, hour, minute, second int, location string) *Times {
 	}
 }
 
+func Today(location string) *Times {
+	ti := time.Now()
+	t := Times{
+		year:     ti.Year(),
+		month:    MonthNameToNumber(ti.Month()),
+		day:      ti.Day(),
+		hour:     ti.Hour(),
+		minute:   ti.Minute(),
+		second:   ti.Second(),
+		timezone: ti.Location(),
+		err:      nil,
+		format:   "2006-01-02 15:04:05",
+		reset:    true,
+	}
+	return &t
+
+}
+
+func TodayAuto() *Times {
+	ti := time.Now()
+	t := Times{
+		year:     ti.Year(),
+		month:    MonthNameToNumber(ti.Month()),
+		day:      ti.Day(),
+		hour:     ti.Hour(),
+		minute:   ti.Minute(),
+		second:   ti.Second(),
+		timezone: time.Now().Location(),
+		err:      nil,
+		format:   "2006-01-02 15:04:05",
+		reset:    true,
+	}
+	return &t
+
+}
+
 ///////////////// HELPERS /////////////////
 func processNumber(num string) string {
 	if len(num) == 1 {
@@ -185,7 +221,7 @@ func (t *Times) formatDifference(data time.Duration) Diff {
 	}
 
 	tmp.year = 0
-	if tmp.month > 12 {
+	if tmp.month > 11 {
 		tmp.year = tmp.month / 12
 		tmp.month = tmp.month % 12
 	}
@@ -220,8 +256,507 @@ func (t *Times) processStruct(tmp Diff) string {
 }
 
 ///////////////// TO IMPLEMENT /////////////////
+func (t *Times) Location() string {
+	return t.timezone.String()
+}
+
+func (t *Times) TimeToNextQuarter() (time.Time, error) {
+	return time.Now(), nil
+}
+
+func (t *Times) FirstInMonth(day time.Weekday) (time.Time, error) {
+	return time.Now(), nil
+}
+
+func (t *Times) SecondInMonth(day time.Weekday) (time.Time, error) {
+	return time.Now(), nil
+}
+
+func (t *Times) ThirdInMonth(day time.Weekday) (time.Time, error) {
+	return time.Now(), nil
+}
+
+func (t *Times) FourthInMonth(day time.Weekday) (time.Time, error) {
+	return time.Now(), nil
+}
+
+func (t *Times) FifthInMonth(day time.Weekday) (time.Time, error) {
+	return time.Now(), nil
+}
+
+func (t *Times) LastInMonth(day time.Weekday) (time.Time, error) {
+	return time.Now(), nil
+}
+
+func (t *Times) NextEclipse() (time.Time, error) {
+	// https://www.timeanddate.com/eclipse/list.html
+	return time.Now(), nil
+}
+
+func (t *Times) TimeZoneDiff(tz time.Location) string {
+	return ""
+}
+func (t *Times) TimeZoneDiffYears(tz time.Location) string {
+	return ""
+}
+func (t *Times) TimeZoneDiffMonths(tz time.Location) string {
+	return ""
+}
+func (t *Times) TimeZoneDiffWeeks(tz time.Location) string {
+	return ""
+}
+func (t *Times) TimeZoneDiffDays(tz time.Location) string {
+	return ""
+}
+func (t *Times) TimeZoneDiffHours(tz time.Location) string {
+	return ""
+}
+func (t *Times) TimeZoneDiffMinutes(tz time.Location) string {
+	return ""
+}
+func (t *Times) TimeZoneDiffSeconds(tz time.Location) string {
+	return ""
+}
 
 ///////////////// IMPLEMENTED /////////////////
+func (t *Times) TaxYear() string {
+	if t.month < 4 && t.day < 6 {
+		return as.ToString(t.year-1) + "-" + as.ToString(t.year)
+	} else if t.month > 3 && t.day > 5 {
+		return as.ToString(t.year) + "-" + as.ToString(t.year+1)
+	}
+	return ""
+}
+
+func (t *Times) StartOfTaxYear() (time.Time, error) {
+	t2 := *t
+	if t.month < 4 && t.day < 6 {
+		t2.year -= 1
+	}
+
+	t2.month = 4
+	t2.day = 6
+	t2.hour = 00
+	t2.minute = 00
+	t2.second = 00
+	return t2.formattedDate()
+}
+
+func (t *Times) EndOfTaxYear() (time.Time, error) {
+	t2 := *t
+	if t.month > 3 && t.day > 5 {
+		t2.year += 1
+	}
+
+	t2.month = 4
+	t2.day = 5
+	t2.hour = 23
+	t2.minute = 59
+	t2.second = 59
+	return t2.formattedDate()
+}
+
+func (t *Times) TimeToTaxYear() string {
+	tmp, _ := t.formattedDate()
+	year := t.year
+	if t.month > 3 && t.day > 5 {
+		year += 1
+	}
+	t2 := New(year, 4, 6, 00, 00, 00, "Europe/London")
+	tmp2, _ := t2.formattedDate()
+
+	tmp3 := tmp2.Sub(tmp)
+
+	tmp4 := t.formatDifference(tmp3)
+	return t.processStruct(tmp4)
+}
+
+func (t *Times) TimeToTaxYearDiff() Diff {
+	tmp, _ := t.formattedDate()
+	year := t.year
+	if t.month > 3 && t.day > 5 {
+		year += 1
+	}
+	t2 := New(year, 4, 6, 00, 00, 00, "Europe/London")
+	tmp2, _ := t2.formattedDate()
+
+	tmp3 := tmp2.Sub(tmp)
+
+	return t.formatDifference(tmp3)
+}
+
+func (t *Times) AddDecade() (time.Time, error) {
+	tmp, err := t.formattedDate()
+	if err == nil {
+		tmp = tmp.AddDate(10, 0, 0)
+	}
+	if !t.reset {
+		t.updateValues(tmp)
+	}
+	return tmp, err
+}
+
+func (t *Times) AddDecades(decades int) (time.Time, error) {
+	tmp, err := t.formattedDate()
+	if err == nil {
+		tmp = tmp.AddDate(decades*10, 0, 0)
+	}
+	if !t.reset {
+		t.updateValues(tmp)
+	}
+	return tmp, err
+}
+
+func (t *Times) SubDecade() (time.Time, error) {
+	tmp, err := t.formattedDate()
+	if err == nil {
+		tmp = tmp.AddDate(-10, 0, 0)
+	}
+	if !t.reset {
+		t.updateValues(tmp)
+	}
+	return tmp, err
+}
+
+func (t *Times) SubDecades(decades int) (time.Time, error) {
+	tmp, err := t.formattedDate()
+	if err == nil {
+		tmp = tmp.AddDate(-decades*10, 0, 0)
+	}
+	if !t.reset {
+		t.updateValues(tmp)
+	}
+	return tmp, err
+}
+
+func (t *Times) StartOfQuarter() (time.Time, error) {
+	t2 := *t
+
+	if t.Is1stQuarter() {
+		t2.month = 1
+		t2.day = 1
+	} else if t.Is2ndQuarter() {
+		t2.month = 4
+		t2.day = 1
+	} else if t.Is3rdQuarter() {
+		t2.month = 7
+		t2.day = 1
+	} else if t.Is4thQuarter() {
+		t2.month = 10
+		t2.day = 1
+	}
+
+	t2.hour = 00
+	t2.minute = 00
+	t2.second = 00
+
+	return t2.formattedDate()
+}
+
+func (t *Times) EndOfQuarter() (time.Time, error) {
+	t2 := *t
+
+	if t.Is1stQuarter() {
+		t2.month = 3
+		t2.day = 31
+	} else if t.Is2ndQuarter() {
+		t2.month = 6
+		t2.day = 30
+	} else if t.Is3rdQuarter() {
+		t2.month = 9
+		t2.day = 31
+	} else if t.Is4thQuarter() {
+		t2.month = 12
+		t2.day = 31
+	}
+
+	t2.hour = 23
+	t2.minute = 59
+	t2.second = 59
+
+	return t2.formattedDate()
+}
+
+func (t *Times) Quarter() string {
+	if t.Is1stQuarter() {
+		return "1st"
+	} else if t.Is2ndQuarter() {
+		return "2nd"
+	} else if t.Is3rdQuarter() {
+		return "3rd"
+	} else if t.Is4thQuarter() {
+		return "4th"
+	}
+	return ""
+}
+
+func (t *Times) QuarterNumber() int {
+	if t.Is1stQuarter() {
+		return 1
+	} else if t.Is2ndQuarter() {
+		return 2
+	} else if t.Is3rdQuarter() {
+		return 3
+	} else if t.Is4thQuarter() {
+		return 4
+	}
+	return 0
+}
+
+func (t *Times) Is1stQuarter() bool {
+	start := New(t.year, 1, 1, 00, 00, 00, t.timezone.String())
+	end := New(t.year, 3, 31, 23, 59, 59, t.timezone.String())
+
+	if t.IsBetween(start, end) {
+		return true
+	}
+	return false
+}
+
+func (t *Times) Is2ndQuarter() bool {
+	start := New(t.year, 4, 1, 00, 00, 00, t.timezone.String())
+	end := New(t.year, 6, 30, 23, 59, 59, t.timezone.String())
+
+	if t.IsBetween(start, end) {
+		return true
+	}
+	return false
+}
+
+func (t *Times) Is3rdQuarter() bool {
+	start := New(t.year, 7, 1, 00, 00, 00, t.timezone.String())
+	end := New(t.year, 9, 31, 23, 59, 59, t.timezone.String())
+
+	if t.IsBetween(start, end) {
+		return true
+	}
+	return false
+}
+
+func (t *Times) Is4thQuarter() bool {
+	start := New(t.year, 10, 1, 00, 00, 00, t.timezone.String())
+	end := New(t.year, 12, 31, 23, 59, 59, t.timezone.String())
+
+	if t.IsBetween(start, end) {
+		return true
+	}
+	return false
+}
+
+func (t *Times) NextLeapYear() string {
+	year := t.year
+	for i := 0; i < 6; i++ {
+		if internalIsLeapYear(year) {
+			return as.ToString(year)
+		} else {
+			year += 1
+		}
+	}
+
+	return ""
+}
+
+func (t *Times) TimeToSpring() string {
+	// 20th March
+	tmp, _ := t.formattedDate()
+	year := t.year
+	if t.month > 3 {
+		year += 1
+	}
+	t2 := New(year, 3, 20, 00, 00, 00, "Europe/London")
+	tmp2, _ := t2.formattedDate()
+
+	tmp3 := tmp2.Sub(tmp)
+
+	tmp4 := t.formatDifference(tmp3)
+	return t.processStruct(tmp4)
+}
+
+func (t *Times) TimeToSpringDiff() Diff {
+	tmp, _ := t.formattedDate()
+	year := t.year
+	if t.month > 3 {
+		year += 1
+	}
+	t2 := New(year, 3, 20, 00, 00, 00, "Europe/London")
+	tmp2, _ := t2.formattedDate()
+
+	tmp3 := tmp2.Sub(tmp)
+
+	return t.formatDifference(tmp3)
+}
+
+func (t *Times) TimeToSummer() string {
+	// 21st June
+	tmp, _ := t.formattedDate()
+	year := t.year
+	if t.month > 6 {
+		year += 1
+	}
+	t2 := New(year, 6, 21, 00, 00, 00, "Europe/London")
+	tmp2, _ := t2.formattedDate()
+
+	tmp3 := tmp2.Sub(tmp)
+
+	tmp4 := t.formatDifference(tmp3)
+	return t.processStruct(tmp4)
+}
+
+func (t *Times) TimeToSummerDiff() Diff {
+	tmp, _ := t.formattedDate()
+	year := t.year
+	if t.month > 6 {
+		year += 1
+	}
+	t2 := New(year, 6, 21, 00, 00, 00, "Europe/London")
+	tmp2, _ := t2.formattedDate()
+
+	tmp3 := tmp2.Sub(tmp)
+
+	return t.formatDifference(tmp3)
+}
+
+func (t *Times) TimeToAutumn() string {
+	// 22nd September
+	tmp, _ := t.formattedDate()
+	year := t.year
+	if t.month > 6 {
+		year += 1
+	}
+	t2 := New(year, 9, 22, 00, 00, 00, "Europe/London")
+	tmp2, _ := t2.formattedDate()
+
+	tmp3 := tmp2.Sub(tmp)
+
+	tmp4 := t.formatDifference(tmp3)
+	return t.processStruct(tmp4)
+}
+
+func (t *Times) TimeToAutumnDiff() Diff {
+	tmp, _ := t.formattedDate()
+	year := t.year
+	if t.month > 6 {
+		year += 1
+	}
+	t2 := New(year, 9, 22, 00, 00, 00, "Europe/London")
+	tmp2, _ := t2.formattedDate()
+
+	tmp3 := tmp2.Sub(tmp)
+
+	return t.formatDifference(tmp3)
+}
+
+func (t *Times) TimeToWinter() string {
+	// 21st December
+	// Year before leap year = 22nd
+	tmp, _ := t.formattedDate()
+	nextLeap := as.ToInt(t.NextLeapYear())
+
+	day := 21
+	year := t.year
+	if t.month > 6 {
+		year += 1
+	}
+
+	if nextLeap-year == 1 {
+		day = 22
+	}
+
+	t2 := New(year, 12, day, 00, 00, 00, "Europe/London")
+	tmp2, _ := t2.formattedDate()
+
+	tmp3 := tmp2.Sub(tmp)
+
+	tmp4 := t.formatDifference(tmp3)
+	return t.processStruct(tmp4)
+}
+
+func (t *Times) TimeToWinterDiff() Diff {
+	tmp, _ := t.formattedDate()
+	nextLeap := as.ToInt(t.NextLeapYear())
+
+	day := 21
+	year := t.year
+	if t.month > 6 {
+		year += 1
+	}
+
+	if nextLeap-year == 1 {
+		day = 22
+	}
+
+	t2 := New(year, 12, day, 00, 00, 00, "Europe/London")
+	tmp2, _ := t2.formattedDate()
+
+	tmp3 := tmp2.Sub(tmp)
+
+	return t.formatDifference(tmp3)
+}
+
+func (t *Times) IsSpring() bool {
+	// 20th March
+	start := New(t.year, 3, 20, 00, 00, 00, "Europe/London")
+	end := New(t.year, 6, 20, 23, 59, 59, "Europe/London")
+
+	if t.IsBetween(start, end) {
+		return true
+	}
+	return false
+}
+
+func (t *Times) IsSummer() bool {
+	// 21st June
+	start := New(t.year, 6, 21, 00, 00, 00, "Europe/London")
+	end := New(t.year, 9, 21, 23, 59, 59, "Europe/London")
+
+	if t.IsBetween(start, end) {
+		return true
+	}
+	return false
+}
+
+func (t *Times) IsAutumn() bool {
+	// 22nd September
+	start := New(t.year, 9, 22, 00, 00, 00, "Europe/London")
+	end := New(t.year, 9, 21, 23, 59, 59, "Europe/London")
+
+	if t.IsBetween(start, end) {
+		return true
+	}
+	return false
+}
+
+func (t *Times) IsWinter() bool {
+	// 21st December
+	// Year before leap year = 22nd
+	start1 := New(t.year, 1, 1, 00, 00, 00, "Europe/London")
+	end1 := New(t.year, 3, 19, 23, 59, 59, "Europe/London")
+	start2 := New(t.year, 12, 21, 00, 00, 00, "Europe/London")
+	end2 := New(t.year, 12, 31, 23, 59, 59, "Europe/London")
+
+	if t.IsBetween(start1, end1) || t.IsBetween(start2, end2) {
+		return true
+	}
+	return false
+}
+
+func (t *Times) Season() string {
+	if t.IsSpring() {
+		return "Spring"
+	} else if t.IsSummer() {
+		return "Summer"
+	} else if t.IsAutumn() {
+		return "Autumn"
+	} else {
+		return "Winter"
+	}
+}
+
+func (t *Times) Copy() *Times {
+	t2 := *t
+	return &t2
+}
+
 func (t *Times) Difference(t2 *Times) string {
 	tmp, _ := t.formattedDate()
 	tmp2, _ := t2.formattedDate()
@@ -305,6 +840,17 @@ func (t *Times) IsFuture(t2 *Times) bool {
 		return true
 	}
 
+	return false
+}
+
+func (t *Times) IsBetween(t2 *Times, t3 *Times) bool {
+	tmp, _ := t.formattedDate()
+	tmp2, _ := t2.formattedDate()
+	tmp3, _ := t3.formattedDate()
+
+	if tmp.After(tmp2) && tmp.Before(tmp3) {
+		return true
+	}
 	return false
 }
 
@@ -521,6 +1067,29 @@ func (t *Times) TimeNext(day time.Weekday) (time.Time, error) {
 	return tmp.AddDate(0, 0, days), nil
 }
 
+func (t *Times) EndOfHour() (time.Time, error) {
+	t2 := *t
+	t.minute = 59
+	t.second = 59
+	tmp, err := t.formattedDate()
+
+	if t.reset {
+		*t = t2
+	}
+	return tmp, err
+}
+
+func (t *Times) EndOfMinute() (time.Time, error) {
+	t2 := *t
+	t.second = 59
+	tmp, err := t.formattedDate()
+
+	if t.reset {
+		*t = t2
+	}
+	return tmp, err
+}
+
 func (t *Times) EndOfDay() (time.Time, error) {
 	t2 := *t
 	t.hour = 23
@@ -547,7 +1116,6 @@ func (t *Times) EndOfWorkWeek() (time.Time, error) {
 		*t = t2
 	}
 	return tmp, err
-
 }
 
 func (t *Times) EndOfWeek() (time.Time, error) {
@@ -564,7 +1132,6 @@ func (t *Times) EndOfWeek() (time.Time, error) {
 		*t = t2
 	}
 	return tmp, err
-
 }
 
 func (t *Times) EndOfMonth() (time.Time, error) {
@@ -731,6 +1298,29 @@ func (t *Times) StartOfMonth() (time.Time, error) {
 	return tmp, nil
 }
 
+func (t *Times) StartOfHour() (time.Time, error) {
+	t2 := *t
+	t.minute = 00
+	t.second = 00
+	tmp, err := t.formattedDate()
+
+	if t.reset {
+		*t = t2
+	}
+	return tmp, err
+}
+
+func (t *Times) StartOfMinute() (time.Time, error) {
+	t2 := *t
+	t.second = 00
+	tmp, err := t.formattedDate()
+
+	if t.reset {
+		*t = t2
+	}
+	return tmp, err
+}
+
 func (t *Times) IsWeekend() bool {
 	ti, _ := t.formattedDate()
 	if ti.Weekday() == time.Saturday || ti.Weekday() == time.Sunday {
@@ -804,6 +1394,10 @@ func (t *Times) IsSunday() bool {
 
 func (t *Times) IsLeapYear() bool {
 	return t.year%4 == 0 && (t.year%100 != 0 || t.year%400 == 0)
+}
+
+func internalIsLeapYear(year int) bool {
+	return year%4 == 0 && (year%100 != 0 || year%400 == 0)
 }
 
 func (t *Times) AddYear() (time.Time, error) {
