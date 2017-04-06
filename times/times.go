@@ -8,6 +8,10 @@ import (
 	"github.com/robjporter/go-functions/as"
 )
 
+const (
+	VERSION = "1.2.0.0"
+)
+
 type Times struct {
 	year     int
 	month    int
