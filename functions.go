@@ -17,6 +17,10 @@ import (
 	"github.com/robjporter/go-functions/as"
 )
 
+const (
+	VERSION = "1.1.0"
+)
+
 var (
 	Bold = func(content string) (template.HTML, error) {
 		return template.HTML("<b>" + content + "</b>"), nil
