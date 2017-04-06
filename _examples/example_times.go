@@ -176,8 +176,8 @@ func main() {
 	fmt.Println("IS FRIDAY:              ()>", t.IsFriday())
 	fmt.Println("IS SATURDAY:            ()>", t.IsSaturday())
 	fmt.Println("IS SUNDAY:              ()>", t.IsSunday())
-	t4 := times.New(year-1, times.MonthNameToNumber(month), day, hour, minute, second, "Europe/London")
-	t5 := times.New(year+1, times.MonthNameToNumber(month), day, hour, minute, second, "Europe/London")
+	t4 := times.New(year-1, times.MonthToNumber(month), day, hour, minute, second, "Europe/London")
+	t5 := times.New(year+1, times.MonthToNumber(month), day, hour, minute, second, "Europe/London")
 	fmt.Println("IS BETWEEN:        (t4,t5)>", t.IsBetween(t4, t5))
 	fmt.Println("IS SPRING:              ()>", t.IsSpring())
 	fmt.Println("IS SUMMER:              ()>", t.IsSummer())
@@ -185,7 +185,7 @@ func main() {
 	fmt.Println("IS WINTER:              ()>", t.IsWinter())
 
 	fmt.Println("\nDIFFERENCE ==============================================")
-	t3 := times.New(year+1, times.MonthNameToNumber(month)+1, day+8, hour+1, minute+1, second+4, "Europe/London")
+	t3 := times.New(year+1, times.MonthToNumber(month)+1, day+8, hour+1, minute+1, second+4, "Europe/London")
 	fmt.Println("DIFFERENCE:             ()>", t.DifferenceDiff(t3))
 	fmt.Println("DIFFERENCE:             ()>", t.Difference(t3))
 	fmt.Println("DIFFINYEARS:            ()>", t.DiffInYears(t3))
@@ -253,21 +253,23 @@ func main() {
 	fmt.Println("FORMAT 20:              ()>", result2)
 
 	fmt.Println("\nFUNCTIONS ===============================================")
-	t = times.New(year, times.MonthNameToNumber(month), day, hour, minute, second, "Europe/London")
+	t = times.New(year, times.MonthToNumber(month), day, hour, minute, second, "Europe/London")
 	fmt.Println("IS LEAP YEAR:           ()>", t.IsLeapYear())
 	fmt.Println("NEXT LEAP YEAR:         ()>", t.NextLeapYear())
 	result, _ = t.TimeNext(time.Wednesday)
 	fmt.Println("TIME NEXT:     (Wednesday)>", result)
 	result, _ = t.TimePrevious(time.Wednesday)
 	fmt.Println("TIME LAST:     (Wednesday)>", result)
-
-	t2 := times.New(year, times.MonthNameToNumber(month), day+1, hour, minute, second, "Europe/London")
+	t2 := times.New(year, times.MonthToNumber(month), day+1, hour, minute, second, "Europe/London")
 	fmt.Println("IS FUTURE:              ()>", t.IsFuture(t2))
 	t2.SubDay()
 	fmt.Println("IS PAST:                ()>", t.IsPast(t2))
-
 	result2, _ = t.ISOWeek()
 	fmt.Println("ISO WEEK:               ()>", result2)
-	fmt.Println("LOCATION:               ()>", t.Location)
+	fmt.Println("MONTH NUMBER:        (jan)>", times.MonthNameToNumber("jan"))
+	fmt.Println("MONTH NAME:          (jan)>", times.MonthNameToFullName("jan"))
+	fmt.Println("MONTH NAME:        (April)>", times.MonthToNumber(month))
+	fmt.Println("MONTH NAME:        (April)>", times.MonthToName(month))
 
+	fmt.Println("LOCATION:               ()>", t.Location())
 }

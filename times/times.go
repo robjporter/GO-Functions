@@ -57,7 +57,7 @@ func Today(location string) *Times {
 	ti := time.Now()
 	t := Times{
 		year:     ti.Year(),
-		month:    MonthNameToNumber(ti.Month()),
+		month:    MonthToNumber(ti.Month()),
 		day:      ti.Day(),
 		hour:     ti.Hour(),
 		minute:   ti.Minute(),
@@ -75,7 +75,7 @@ func TodayAuto() *Times {
 	ti := time.Now()
 	t := Times{
 		year:     ti.Year(),
-		month:    MonthNameToNumber(ti.Month()),
+		month:    MonthToNumber(ti.Month()),
 		day:      ti.Day(),
 		hour:     ti.Hour(),
 		minute:   ti.Minute(),
@@ -90,6 +90,10 @@ func TodayAuto() *Times {
 }
 
 ///////////////// HELPERS /////////////////
+func (t *Times) GetMonth() int {
+	return t.month
+}
+
 func processNumber(num string) string {
 	if len(num) == 1 {
 		return "0" + num
@@ -107,7 +111,7 @@ func (t *Times) formattedDate() (time.Time, error) {
 	return time.Parse(t.format, t.buildTimeString())
 }
 
-func MonthNameToNumber(month time.Month) int {
+func MonthToNumber(month time.Month) int {
 	switch month {
 	case time.January:
 		return 1
@@ -135,6 +139,46 @@ func MonthNameToNumber(month time.Month) int {
 		return 12
 	}
 	return 0
+}
+
+func MonthToName(month time.Month) string {
+	monthNames := []string{"January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"}
+	return monthNames[MonthToNumber(month)-1]
+}
+
+func MonthNameToNumber(month string) int {
+	monthLong := []string{"january", "february", "march", "april", "may", "june", "july", "august", "september", "october", "november", "december"}
+	monthShort := []string{"jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"}
+	for i := 0; i < len(monthLong); i++ {
+		if doesMatchMonth(month, monthShort[i], monthLong[i]) {
+			return i + 1
+		}
+	}
+	return -1
+}
+
+func MonthNameToFullName(month string) string {
+	monthNames := []string{"January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"}
+	monthLong := []string{"january", "february", "march", "april", "may", "june", "july", "august", "september", "october", "november", "december"}
+	monthShort := []string{"jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"}
+	for i := 0; i < len(monthLong); i++ {
+		if doesMatchMonth(month, monthShort[i], monthLong[i]) {
+			return monthNames[i]
+		}
+	}
+	return ""
+}
+
+func doesMatchMonth(month, monthShort, monthLong string) bool {
+	month = strings.ToLower(month)
+	if month == monthLong || month == monthShort {
+		return true
+	} else {
+		if strings.HasPrefix(month, monthShort) {
+			return true
+		}
+	}
+	return false
 }
 
 func (t *Times) getWeekDayNumber(day time.Weekday) int {
@@ -175,7 +219,7 @@ func (t *Times) maxDaysInMonth() int {
 
 func (t *Times) updateValues(date time.Time) {
 	t.year = date.Year()
-	t.month = MonthNameToNumber(date.Month())
+	t.month = MonthToNumber(date.Month())
 	t.day = date.Day()
 	t.hour = date.Hour()
 	t.minute = date.Minute()
@@ -256,6 +300,7 @@ func (t *Times) processStruct(tmp Diff) string {
 }
 
 ///////////////// TO IMPLEMENT /////////////////
+
 func (t *Times) Location() string {
 	return t.timezone.String()
 }
@@ -362,7 +407,7 @@ func (t *Times) TimeToTaxYear() string {
 	if t.month > 3 && t.day > 5 {
 		year += 1
 	}
-	t2 := New(year, 4, 6, 00, 00, 00, "Europe/London")
+	t2 := New(year, 4, 6, 00, 00, 00, t.Location())
 	tmp2, _ := t2.formattedDate()
 
 	tmp3 := tmp2.Sub(tmp)
@@ -377,7 +422,7 @@ func (t *Times) TimeToTaxYearDiff() Diff {
 	if t.month > 3 && t.day > 5 {
 		year += 1
 	}
-	t2 := New(year, 4, 6, 00, 00, 00, "Europe/London")
+	t2 := New(year, 4, 6, 00, 00, 00, t.Location())
 	tmp2, _ := t2.formattedDate()
 
 	tmp3 := tmp2.Sub(tmp)
@@ -563,7 +608,7 @@ func (t *Times) TimeToSpring() string {
 	if t.month > 3 {
 		year += 1
 	}
-	t2 := New(year, 3, 20, 00, 00, 00, "Europe/London")
+	t2 := New(year, 3, 20, 00, 00, 00, t.Location())
 	tmp2, _ := t2.formattedDate()
 
 	tmp3 := tmp2.Sub(tmp)
@@ -578,7 +623,7 @@ func (t *Times) TimeToSpringDiff() Diff {
 	if t.month > 3 {
 		year += 1
 	}
-	t2 := New(year, 3, 20, 00, 00, 00, "Europe/London")
+	t2 := New(year, 3, 20, 00, 00, 00, t.Location())
 	tmp2, _ := t2.formattedDate()
 
 	tmp3 := tmp2.Sub(tmp)
@@ -593,7 +638,7 @@ func (t *Times) TimeToSummer() string {
 	if t.month > 6 {
 		year += 1
 	}
-	t2 := New(year, 6, 21, 00, 00, 00, "Europe/London")
+	t2 := New(year, 6, 21, 00, 00, 00, t.Location())
 	tmp2, _ := t2.formattedDate()
 
 	tmp3 := tmp2.Sub(tmp)
@@ -608,7 +653,7 @@ func (t *Times) TimeToSummerDiff() Diff {
 	if t.month > 6 {
 		year += 1
 	}
-	t2 := New(year, 6, 21, 00, 00, 00, "Europe/London")
+	t2 := New(year, 6, 21, 00, 00, 00, t.Location())
 	tmp2, _ := t2.formattedDate()
 
 	tmp3 := tmp2.Sub(tmp)
@@ -623,7 +668,7 @@ func (t *Times) TimeToAutumn() string {
 	if t.month > 6 {
 		year += 1
 	}
-	t2 := New(year, 9, 22, 00, 00, 00, "Europe/London")
+	t2 := New(year, 9, 22, 00, 00, 00, t.Location())
 	tmp2, _ := t2.formattedDate()
 
 	tmp3 := tmp2.Sub(tmp)
@@ -638,7 +683,7 @@ func (t *Times) TimeToAutumnDiff() Diff {
 	if t.month > 6 {
 		year += 1
 	}
-	t2 := New(year, 9, 22, 00, 00, 00, "Europe/London")
+	t2 := New(year, 9, 22, 00, 00, 00, t.Location())
 	tmp2, _ := t2.formattedDate()
 
 	tmp3 := tmp2.Sub(tmp)
@@ -662,7 +707,7 @@ func (t *Times) TimeToWinter() string {
 		day = 22
 	}
 
-	t2 := New(year, 12, day, 00, 00, 00, "Europe/London")
+	t2 := New(year, 12, day, 00, 00, 00, t.Location())
 	tmp2, _ := t2.formattedDate()
 
 	tmp3 := tmp2.Sub(tmp)
@@ -685,7 +730,7 @@ func (t *Times) TimeToWinterDiff() Diff {
 		day = 22
 	}
 
-	t2 := New(year, 12, day, 00, 00, 00, "Europe/London")
+	t2 := New(year, 12, day, 00, 00, 00, t.Location())
 	tmp2, _ := t2.formattedDate()
 
 	tmp3 := tmp2.Sub(tmp)
@@ -695,8 +740,8 @@ func (t *Times) TimeToWinterDiff() Diff {
 
 func (t *Times) IsSpring() bool {
 	// 20th March
-	start := New(t.year, 3, 20, 00, 00, 00, "Europe/London")
-	end := New(t.year, 6, 20, 23, 59, 59, "Europe/London")
+	start := New(t.year, 3, 20, 00, 00, 00, t.Location())
+	end := New(t.year, 6, 20, 23, 59, 59, t.Location())
 
 	if t.IsBetween(start, end) {
 		return true
@@ -706,8 +751,8 @@ func (t *Times) IsSpring() bool {
 
 func (t *Times) IsSummer() bool {
 	// 21st June
-	start := New(t.year, 6, 21, 00, 00, 00, "Europe/London")
-	end := New(t.year, 9, 21, 23, 59, 59, "Europe/London")
+	start := New(t.year, 6, 21, 00, 00, 00, t.Location())
+	end := New(t.year, 9, 21, 23, 59, 59, t.Location())
 
 	if t.IsBetween(start, end) {
 		return true
@@ -717,8 +762,8 @@ func (t *Times) IsSummer() bool {
 
 func (t *Times) IsAutumn() bool {
 	// 22nd September
-	start := New(t.year, 9, 22, 00, 00, 00, "Europe/London")
-	end := New(t.year, 9, 21, 23, 59, 59, "Europe/London")
+	start := New(t.year, 9, 22, 00, 00, 00, t.Location())
+	end := New(t.year, 9, 21, 23, 59, 59, t.Location())
 
 	if t.IsBetween(start, end) {
 		return true
@@ -729,10 +774,10 @@ func (t *Times) IsAutumn() bool {
 func (t *Times) IsWinter() bool {
 	// 21st December
 	// Year before leap year = 22nd
-	start1 := New(t.year, 1, 1, 00, 00, 00, "Europe/London")
-	end1 := New(t.year, 3, 19, 23, 59, 59, "Europe/London")
-	start2 := New(t.year, 12, 21, 00, 00, 00, "Europe/London")
-	end2 := New(t.year, 12, 31, 23, 59, 59, "Europe/London")
+	start1 := New(t.year, 1, 1, 00, 00, 00, t.Location())
+	end1 := New(t.year, 3, 19, 23, 59, 59, t.Location())
+	start2 := New(t.year, 12, 21, 00, 00, 00, t.Location())
+	end2 := New(t.year, 12, 31, 23, 59, 59, t.Location())
 
 	if t.IsBetween(start1, end1) || t.IsBetween(start2, end2) {
 		return true
