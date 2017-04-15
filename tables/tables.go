@@ -1,6 +1,6 @@
 // Shout out to the unlicensed repo https://github.com/crackcomm/go-clitable
 
-package terminal
+package tables
 
 import (
 	"fmt"
