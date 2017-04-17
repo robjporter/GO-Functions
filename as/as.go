@@ -19,6 +19,16 @@ const (
 	KindDuration
 )
 
+const (
+	B = 1 << (10 * iota)
+	KB
+	MB
+	GB
+	TB
+	PB
+	EB
+)
+
 var timeformats = []string{
 	time.ANSIC,
 	time.UnixDate,
@@ -52,6 +62,39 @@ var timeformats = []string{
 	"2006-01-02 15:04:05",
 	"2006-01-02T15:04:05",
 	"02.01.2006 15:04:05",
+}
+
+func FormatIntToByte(b int64) string {
+	multiple := ""
+	value := float64(b)
+
+	switch {
+	case b < KB:
+		return strconv.FormatInt(b, 10) + "B"
+	case b < MB:
+		value /= KB
+		multiple = "KB"
+	case b < MB:
+		value /= KB
+		multiple = "KB"
+	case b < GB:
+		value /= MB
+		multiple = "MB"
+	case b < TB:
+		value /= GB
+		multiple = "GB"
+	case b < PB:
+		value /= TB
+		multiple = "TB"
+	case b < EB:
+		value /= PB
+		multiple = "PB"
+	default:
+		value = 0
+		multiple = ""
+	}
+
+	return fmt.Sprintf("%.02f%s", value, multiple)
 }
 
 func Convert(value interface{}, t reflect.Kind) (interface{}, error) {

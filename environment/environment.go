@@ -1,17 +1,52 @@
 package environment
 
 import (
+	"bytes"
 	"fmt"
-	"github.com/robjporter/go-functions/as"
 	"os"
+	"os/exec"
+	"os/user"
 	"runtime"
+	"strconv"
 	"strings"
 	"time"
+
+	"github.com/robjporter/go-functions/as"
 )
 
 var (
 	Prefix = ""
+	debug  = os.Getenv("BUILDDEBUG") != ""
 )
+
+func GOPATHBIN() string {
+	return os.Getenv("GOPATH") + "bin"
+}
+
+func GetAllEnvironment() map[string]string {
+	getenvironment := func(data []string, getkeyval func(item string) (key, val string)) map[string]string {
+		items := make(map[string]string)
+		for _, item := range data {
+			key, val := getkeyval(item)
+			items[key] = val
+		}
+		return items
+	}
+	return getenvironment(os.Environ(), func(item string) (key, val string) {
+		splits := strings.Split(item, "=")
+		key = splits[0]
+		val = strings.Join(splits[1:], "=")
+		return
+	})
+}
+
+func PathSeparator() string {
+	return fmt.Sprintf("%c", os.PathSeparator)
+}
+
+func ListSeparator() string {
+	return fmt.Sprintf("%c", os.PathListSeparator)
+}
 
 func IsCompiled() bool {
 	if strings.HasPrefix(os.Args[0], "/var/folders/") ||
@@ -20,6 +55,71 @@ func IsCompiled() bool {
 		return false
 	}
 	return true
+}
+
+func BuildDebug() bool {
+	return debug
+}
+
+func CheckArchitecture() bool {
+	switch runtime.GOARCH {
+	case "386", "amd64":
+		return true
+	case "arm64", "arm", "ppc64", "ppc64le", "mips", "mipsle":
+		fmt.Println("This is an untested architecture: %q; proceed with caution!", runtime.GOARCH)
+		return false
+	default:
+		fmt.Printf("Unknown goarch %q; proceed with caution!", runtime.GOARCH)
+		return false
+	}
+}
+
+func BuildStamp() int64 {
+	if s, _ := strconv.ParseInt(os.Getenv("SOURCE_DATE_EPOCH"), 10, 64); s > 0 {
+		return s
+	}
+	bs, err := runError("git", "show", "-s", "--format=%ct")
+	if err != nil {
+		return time.Now().Unix()
+	}
+	s, _ := strconv.ParseInt(string(bs), 10, 64)
+	return s
+}
+
+func BuildUser() string {
+	if v := os.Getenv("BUILD_USER"); v != "" {
+		return v
+	}
+	u, err := user.Current()
+	if err != nil {
+		return "unknown-user"
+	}
+	return strings.Replace(u.Username, " ", "-", -1)
+}
+
+func runError(cmd string, args ...string) ([]byte, error) {
+	if debug {
+		t0 := time.Now()
+		fmt.Println("runError:", cmd, strings.Join(args, " "))
+		defer func() {
+			fmt.Println("... in", time.Since(t0))
+		}()
+	}
+	ecmd := exec.Command(cmd, args...)
+	bs, err := ecmd.CombinedOutput()
+	return bytes.TrimSpace(bs), err
+}
+
+func BuildHost() string {
+	if v := os.Getenv("BUILD_HOST"); v != "" {
+		return v
+	}
+
+	h, err := os.Hostname()
+	if err != nil {
+		return "unknown-host"
+	}
+	return h
 }
 
 func Compiler() string {
