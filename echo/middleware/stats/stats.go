@@ -19,6 +19,7 @@ type (
 		BrowserVersion map[string]int `json:"browserversion"`
 		OS             map[string]int `json:"os"`
 		Device         map[string]int `json:"device"`
+		DeviceType     map[string]int `json:"devicetype"`
 		OSVersion      map[string]int `json:"osversion"`
 		mutex          sync.RWMutex
 	}
@@ -32,6 +33,7 @@ func NewStats() *Stats {
 		BrowserVersion: map[string]int{},
 		OS:             map[string]int{},
 		Device:         map[string]int{},
+		DeviceType:     map[string]int{},
 		OSVersion:      map[string]int{},
 	}
 }
@@ -46,20 +48,62 @@ func (s *Stats) Process(next echo.HandlerFunc) echo.HandlerFunc {
 		defer s.mutex.Unlock()
 		s.RequestCount++
 		status := strconv.Itoa(c.Response().Status)
-		browser, browserversion, devicename, osname, osversion := getBrowser(c.Request().UserAgent())
+		browser, browserversion, devicename, devicetype, osname, osversion := getBrowser(c.Request().UserAgent())
 		s.Statuses[status]++
 		s.Browsers[browser]++
 		s.BrowserVersion[browser+" "+browserversion]++
 		s.OS[osname]++
 		s.OSVersion[osname+" "+osversion]++
 		s.Device[devicename]++
+		s.DeviceType[devicetype]++
 		return nil
 	}
 }
 
-func getBrowser(agent string) (string, string, string, string, string) {
+func getBrowser(agent string) (string, string, string, string, string, string) {
+	name := ""
+	version := ""
+	dname := ""
+	osname := ""
+	osversion := ""
+	devicetype := ""
 	ua1 := browser.Parse(agent)
-	return ua1.Browser.Name, ua1.Browser.Version, ua1.Device.Name, ua1.OS.Name, ua1.OS.Version
+
+	if ua1.Browser != nil {
+		if ua1.Browser.Name != "" {
+			name = ua1.Browser.Name
+		}
+		if ua1.Browser.Version != "" {
+			version = ua1.Browser.Version
+		}
+	} else {
+		name = "Unknown"
+		version = "Unknown"
+	}
+	if ua1.Device != nil {
+		if ua1.Device.Name != "" {
+			dname = ua1.Device.Name
+		}
+	} else {
+		dname = "Unknown"
+	}
+	if ua1.OS != nil {
+		if ua1.OS.Name != "" {
+			osname = ua1.OS.Name
+		}
+		if ua1.OS.Version != "" {
+			osversion = ua1.OS.Version
+		}
+	} else {
+		osname = "Unknown"
+		osversion = "Unknown"
+	}
+	if ua1.DeviceType != nil {
+		devicetype = ua1.DeviceType.Name
+	} else {
+		devicetype = "Unknown"
+	}
+	return name, version, dname, devicetype, osname, osversion
 }
 
 // Handle is the endpoint to get stats.

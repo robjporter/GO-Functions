@@ -123,6 +123,12 @@ var (
 		},
 	}
 
+	paw = &itemSpec{
+		name:             "Paw",
+		mustContains:     []string{"Paw", "PAW"},
+		versionSplitters: [][]string{[]string{"Paw/", " "}},
+	}
+
 	_BROWSERS = []*itemSpec{
 		ie,
 		firefox,
@@ -135,5 +141,6 @@ var (
 		qq,
 		maxthon,
 		playstation,
+		paw,
 	}
 )
