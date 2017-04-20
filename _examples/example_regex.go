@@ -1,8 +1,9 @@
 package main
 
 import (
-	"../regex"
 	"fmt"
+
+	"../regex"
 )
 
 func main() {
@@ -37,8 +38,9 @@ func main() {
 	fmt.Println("PASSWORD LOW:   >", regex.PasswordLow(password1))
 	fmt.Println("PASSWORD MED:   >", regex.PasswordMedium(password2))
 	fmt.Println("PASSWORD HIG:   >", regex.PasswordHigh(password3))
-	fmt.Println("UCS VERSION:   >", regex.UCSVersion(text))
-	fmt.Println("UCS VERSION:   >", regex.UCSVersion(ucs))
+	fmt.Println("UCS VERSION:    >", regex.UCSVersion(text))
+	fmt.Println("UCS VERSION:    >", regex.UCSVersion(ucs))
+	fmt.Println("CLEAN STRING:   >", regex.CleanString(password2))
 
 	name := "test"
 	custom := "ab{2,}"

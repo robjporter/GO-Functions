@@ -2,6 +2,11 @@ package terminal
 
 import (
 	"fmt"
+	"os"
+	"os/exec"
+	"strings"
+
+	"github.com/robjporter/go-functions/as"
 )
 
 const ESC = "\033["
@@ -53,4 +58,22 @@ func CursorRestore() {
 func PrintXY(x int, y int, s string) {
 	GotoXY(x, y)
 	fmt.Printf("%s", s)
+}
+
+func GetTerminalSize() (int, int, error) {
+	height := 0
+	width := 0
+	cmd := exec.Command("stty", "size")
+	cmd.Stdin = os.Stdin
+	out, err := cmd.Output()
+
+	if err == nil {
+		splits := strings.Split(string(out), " ")
+		if len(splits) == 2 {
+			height = as.ToInt(splits[0])
+			width = as.ToInt(strings.TrimRight(splits[1], "\n"))
+		}
+	}
+
+	return height, width, err
 }
