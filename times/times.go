@@ -94,8 +94,32 @@ func TodayAuto() *Times {
 }
 
 ///////////////// HELPERS /////////////////
+func (t *Times) GetSecond() int {
+	return t.second
+}
+
+func (t *Times) GetMinute() int {
+	return t.minute
+}
+
+func (t *Times) GetHour() int {
+	return t.hour
+}
+
+func (t *Times) GetDay() int {
+	return t.day
+}
+
 func (t *Times) GetMonth() int {
 	return t.month
+}
+
+func (t *Times) GetYear() int {
+	return t.year
+}
+
+func (t *Times) GetMonthName() string {
+	return MonthIntToName(t.GetMonth())
 }
 
 func processNumber(num string) string {
@@ -143,6 +167,11 @@ func MonthToNumber(month time.Month) int {
 		return 12
 	}
 	return 0
+}
+
+func MonthIntToName(month int) string {
+	monthNames := []string{"January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"}
+	return monthNames[month]
 }
 
 func MonthToName(month time.Month) string {

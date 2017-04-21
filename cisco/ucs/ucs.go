@@ -2,10 +2,12 @@ package ucs
 
 import (
 	//"fmt"
-	"github.com/robjporter/go-functions/as"
-	"github.com/robjporter/go-functions/etree"
-	"github.com/robjporter/go-functions/request"
+
 	"strings"
+
+	"github.com/robjporter/go-functions/as"
+	"github.com/robjporter/go-functions/request"
+	xmlx "github.com/robjporter/go-functions/xml"
 )
 
 const (
@@ -13,12 +15,16 @@ const (
 	XML_REPLACEMENT_END   = ">"
 	XML_LOGIN             = `<aaaLogin inName="<USERNAME>" inPassword="<PASSWORD>"/>`
 	XML_LOGOUT            = `<aaaLogout inCookie="<COOKIE>"/>`
+	XML_TOP_SYSTEM_INFO   = `<configResolveClass cookie="<COOKIE>" classId="topSystem" inHierarchical="false"/>`
+	XML_SERVER_DN         = `<configFindDnsByClassId cookie="<COOKIE>" classId="computeItem"/>`
+	XML_SERVER_DETAIL_DN  = `<configResolveDn cookie="<COOKIE>" dn="<DN>"  inHierarchical="false"/>`
 )
 
 type UCSMDATA struct {
 	version string
 	cookie  string
 	priv    string
+	name    string
 }
 
 type UCSMLogin struct {
@@ -41,6 +47,26 @@ type UCSM struct {
 	data         UCSMDATA
 	login        UCSMLogin
 	LastResponse RESPONSE
+}
+
+type UCSBladeInfo struct {
+	BladeDescr        string
+	BladeDN           string
+	BladeLabel        string
+	BladeModel        string
+	BladeName         string
+	BladePID          string
+	BladeSlot         string
+	BladeChassis      string
+	BladeSerial       string
+	BladeUUID         string
+	BladeMemory       string
+	BladeAssociation  string
+	BladeAssociatedTo string
+	BladeAvailability string
+	BladeSockets      string
+	BladeCores        string
+	BladePower        string
 }
 
 func New() *UCSM {
@@ -96,6 +122,22 @@ func (u *UCSM) getCookieVersion(xml string) bool {
 	return false
 }
 
+func (u *UCSM) GetSystemName() string {
+	u.data.name = ""
+	u.addReplacementString("COOKIE", u.data.cookie)
+	xml := u.xmlReplace(XML_TOP_SYSTEM_INFO)
+	resp, body, err := u.handler.Post("https://"+u.login.ip+"/nuova").Set("Content-Type", "application/xml").Send(xml).End()
+	if err == nil {
+		if resp.StatusCode == 200 {
+			u.data.name = getXMLAttributeData(body, "configResolveClass", "topSystem", "name")
+		}
+	}
+	u.LastResponse.Response = as.ToString(resp)
+	u.LastResponse.Body = body
+	u.LastResponse.Errors = err
+	return u.data.name
+}
+
 func (u *UCSM) xmlReplace(xml string) string {
 	for k, v := range u.replacements {
 		k = XML_REPLACEMENT_START + k + XML_REPLACEMENT_END
@@ -113,21 +155,34 @@ func (u *UCSM) addReplacementString(key, value string) {
 }
 
 func getXMLAttributeData(xml string, root string, element string, attribute string) string {
-	results := ""
-	doc := etree.NewDocument()
-	if err := doc.ReadFromString(xml); err == nil {
-		root := doc.SelectElement(root)
+	doc := xmlx.New()
+	err := doc.LoadString(xml, nil)
+
+	if err == nil {
 		if element == "" {
-			return root.SelectAttrValue(attribute, "unknown")
+			nod := doc.SelectNode("", root)
+			return nod.As("", attribute)
 		} else {
-			element := root.SelectElement(element)
-			if attribute == "" {
-			} else {
-				return element.SelectAttrValue(attribute, "unknown")
-			}
+			nod := doc.SelectNode("", root)
+			nod2 := nod.SelectNode("", element)
+			return nod2.As("", attribute)
 		}
 	}
-	return results
+
+	return "unknown"
+}
+
+func getXMLElements(xml string, root string, element string) []*xmlx.Node {
+	doc := xmlx.New()
+	err := doc.LoadString(xml, nil)
+
+	if err == nil {
+		nod := doc.SelectNode("", root)
+		list := nod.SelectNodes("", "dn")
+		return list
+	}
+
+	return []*xmlx.Node{}
 }
 
 //PUBLIC***********************************************************************
@@ -178,4 +233,57 @@ func (u *UCSM) IsAdmin() bool {
 		}
 	}
 	return false
+}
+
+func (u *UCSM) GetSystemBlades() []UCSBladeInfo {
+	servers := []UCSBladeInfo{}
+	u.addReplacementString("COOKIE", u.data.cookie)
+	xml := u.xmlReplace(XML_SERVER_DN)
+	resp, body, err := u.handler.Post("https://"+u.login.ip+"/nuova").Set("Content-Type", "application/xml").Send(xml).End()
+	if err == nil {
+		if resp.StatusCode == 200 {
+			list := getXMLElements(body, "configFindDnsByClassId", "dn")
+			for i := 0; i < len(list); i++ {
+				servers = append(servers, u.getServerDetail(getXMLAttributeData(as.ToString(list[i]), "dn", "", "value")))
+			}
+		}
+	}
+	u.LastResponse.Response = as.ToString(resp)
+	u.LastResponse.Body = body
+	u.LastResponse.Errors = err
+	return servers
+}
+
+func (u *UCSM) getServerDetail(dn string) UCSBladeInfo {
+	server := UCSBladeInfo{}
+	u.addReplacementString("COOKIE", u.data.cookie)
+	u.addReplacementString("DN", dn)
+	xml := u.xmlReplace(XML_SERVER_DETAIL_DN)
+	resp, body, err := u.handler.Post("https://"+u.login.ip+"/nuova").Set("Content-Type", "application/xml").Send(xml).End()
+	if err == nil {
+		if resp.StatusCode == 200 {
+			server.BladeDescr = getXMLAttributeData(body, "configResolveDn", "computeBlade", "descr")
+			server.BladeDN = dn
+			server.BladeLabel = getXMLAttributeData(body, "configResolveDn", "computeBlade", "usrLbl")
+			server.BladeModel = getXMLAttributeData(body, "configResolveDn", "computeBlade", "model")
+			server.BladeName = getXMLAttributeData(body, "configResolveDn", "computeBlade", "name")
+			server.BladePID = getXMLAttributeData(body, "configResolveDn", "computeBlade", "partNumber")
+			server.BladeSlot = getXMLAttributeData(body, "configResolveDn", "computeBlade", "slotId")
+			server.BladeChassis = getXMLAttributeData(body, "configResolveDn", "computeBlade", "chassisId")
+			server.BladeSerial = getXMLAttributeData(body, "configResolveDn", "computeBlade", "serial")
+			server.BladeUUID = getXMLAttributeData(body, "configResolveDn", "computeBlade", "uuid")
+			server.BladeMemory = getXMLAttributeData(body, "configResolveDn", "computeBlade", "totalMemory")
+			server.BladeAssociation = getXMLAttributeData(body, "configResolveDn", "computeBlade", "association")
+			server.BladeAssociatedTo = getXMLAttributeData(body, "configResolveDn", "computeBlade", "assignedToDn")
+			server.BladeAvailability = getXMLAttributeData(body, "configResolveDn", "computeBlade", "availability")
+			server.BladeSockets = getXMLAttributeData(body, "configResolveDn", "computeBlade", "numOfCpus")
+			server.BladeCores = getXMLAttributeData(body, "configResolveDn", "computeBlade", "numOfCores")
+			server.BladePower = getXMLAttributeData(body, "configResolveDn", "computeBlade", "operPower")
+		}
+	}
+	u.LastResponse.Response = as.ToString(resp)
+	u.LastResponse.Body = body
+	u.LastResponse.Errors = err
+	return server
+
 }
