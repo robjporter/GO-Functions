@@ -161,11 +161,17 @@ func getXMLAttributeData(xml string, root string, element string, attribute stri
 	if err == nil {
 		if element == "" {
 			nod := doc.SelectNode("", root)
-			return nod.As("", attribute)
+			if nod != nil {
+				return nod.As("", attribute)
+			}
 		} else {
 			nod := doc.SelectNode("", root)
-			nod2 := nod.SelectNode("", element)
-			return nod2.As("", attribute)
+			if nod != nil {
+				nod2 := nod.SelectNode("", element)
+				if nod2 != nil {
+					return nod2.As("", attribute)
+				}
+			}
 		}
 	}
 
@@ -178,8 +184,12 @@ func getXMLElements(xml string, root string, element string) []*xmlx.Node {
 
 	if err == nil {
 		nod := doc.SelectNode("", root)
-		list := nod.SelectNodes("", "dn")
-		return list
+		if nod != nil {
+			list := nod.SelectNodes("", "dn")
+			if list != nil {
+				return list
+			}
+		}
 	}
 
 	return []*xmlx.Node{}
