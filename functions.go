@@ -12,6 +12,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/robjporter/go-functions/as"
@@ -32,6 +33,22 @@ var (
 		return template.HTML("<u>" + content + "</u>"), nil
 	}
 )
+
+// Parallel runs a given function n times concurrently
+// NOTE: Please set runtime.GOMAXPROCS to runtime.NumCPU() for best
+// performance
+func Parallel(n int, fn func()) {
+	var wg sync.WaitGroup
+	wg.Add(n)
+	defer wg.Wait()
+
+	for i := 0; i < n; i++ {
+		go func() {
+			fn()
+			wg.Done()
+		}()
+	}
+}
 
 func Exists(path string) bool {
 	_, err := os.Stat(path)

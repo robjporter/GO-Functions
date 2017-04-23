@@ -57,7 +57,7 @@ func New(year, month, day, hour, minute, second int, location string) *Times {
 	}
 }
 
-func Today(location string) *Times {
+func NewToday(location string) *Times {
 	ti := time.Now()
 	t := Times{
 		year:     ti.Year(),
@@ -75,7 +75,7 @@ func Today(location string) *Times {
 
 }
 
-func TodayAuto() *Times {
+func NewTodayAuto() *Times {
 	ti := time.Now()
 	t := Times{
 		year:     ti.Year(),
@@ -91,6 +91,81 @@ func TodayAuto() *Times {
 	}
 	return &t
 
+}
+
+///////////////// TO IMPLEMENT /////////////////
+func (t *Times) WeekNumber() int {
+	return 0
+}
+
+func (t *Times) GetStartOfWeekNumber(week int) time.Weekday {
+	return time.Monday
+}
+
+func (t *Times) GetDateForStartOfWeekNumber(week int) time.Time {
+	return time.Now()
+}
+
+func (t *Times) Location() string {
+	return t.timezone.String()
+}
+
+func (t *Times) TimeToNextQuarter() (time.Time, error) {
+	return time.Now(), nil
+}
+
+func (t *Times) FirstInMonth(day time.Weekday) (time.Time, error) {
+	return time.Now(), nil
+}
+
+func (t *Times) SecondInMonth(day time.Weekday) (time.Time, error) {
+	return time.Now(), nil
+}
+
+func (t *Times) ThirdInMonth(day time.Weekday) (time.Time, error) {
+	return time.Now(), nil
+}
+
+func (t *Times) FourthInMonth(day time.Weekday) (time.Time, error) {
+	return time.Now(), nil
+}
+
+func (t *Times) FifthInMonth(day time.Weekday) (time.Time, error) {
+	return time.Now(), nil
+}
+
+func (t *Times) LastInMonth(day time.Weekday) (time.Time, error) {
+	return time.Now(), nil
+}
+
+func (t *Times) NextEclipse() (time.Time, error) {
+	// https://www.timeanddate.com/eclipse/list.html
+	return time.Now(), nil
+}
+
+func (t *Times) TimeZoneDiff(tz time.Location) string {
+	return ""
+}
+func (t *Times) TimeZoneDiffYears(tz time.Location) string {
+	return ""
+}
+func (t *Times) TimeZoneDiffMonths(tz time.Location) string {
+	return ""
+}
+func (t *Times) TimeZoneDiffWeeks(tz time.Location) string {
+	return ""
+}
+func (t *Times) TimeZoneDiffDays(tz time.Location) string {
+	return ""
+}
+func (t *Times) TimeZoneDiffHours(tz time.Location) string {
+	return ""
+}
+func (t *Times) TimeZoneDiffMinutes(tz time.Location) string {
+	return ""
+}
+func (t *Times) TimeZoneDiffSeconds(tz time.Location) string {
+	return ""
 }
 
 ///////////////// HELPERS /////////////////
@@ -330,70 +405,6 @@ func (t *Times) processStruct(tmp Diff) string {
 		result = as.ToString(tmp.year) + "y" + result
 	}
 	return result
-}
-
-///////////////// TO IMPLEMENT /////////////////
-
-func (t *Times) Location() string {
-	return t.timezone.String()
-}
-
-func (t *Times) TimeToNextQuarter() (time.Time, error) {
-	return time.Now(), nil
-}
-
-func (t *Times) FirstInMonth(day time.Weekday) (time.Time, error) {
-	return time.Now(), nil
-}
-
-func (t *Times) SecondInMonth(day time.Weekday) (time.Time, error) {
-	return time.Now(), nil
-}
-
-func (t *Times) ThirdInMonth(day time.Weekday) (time.Time, error) {
-	return time.Now(), nil
-}
-
-func (t *Times) FourthInMonth(day time.Weekday) (time.Time, error) {
-	return time.Now(), nil
-}
-
-func (t *Times) FifthInMonth(day time.Weekday) (time.Time, error) {
-	return time.Now(), nil
-}
-
-func (t *Times) LastInMonth(day time.Weekday) (time.Time, error) {
-	return time.Now(), nil
-}
-
-func (t *Times) NextEclipse() (time.Time, error) {
-	// https://www.timeanddate.com/eclipse/list.html
-	return time.Now(), nil
-}
-
-func (t *Times) TimeZoneDiff(tz time.Location) string {
-	return ""
-}
-func (t *Times) TimeZoneDiffYears(tz time.Location) string {
-	return ""
-}
-func (t *Times) TimeZoneDiffMonths(tz time.Location) string {
-	return ""
-}
-func (t *Times) TimeZoneDiffWeeks(tz time.Location) string {
-	return ""
-}
-func (t *Times) TimeZoneDiffDays(tz time.Location) string {
-	return ""
-}
-func (t *Times) TimeZoneDiffHours(tz time.Location) string {
-	return ""
-}
-func (t *Times) TimeZoneDiffMinutes(tz time.Location) string {
-	return ""
-}
-func (t *Times) TimeZoneDiffSeconds(tz time.Location) string {
-	return ""
 }
 
 ///////////////// IMPLEMENTED /////////////////

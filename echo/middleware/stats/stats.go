@@ -10,6 +10,30 @@ import (
 	"github.com/robjporter/go-functions/browser"
 )
 
+/*
+
+{
+    "total_response_time": "1.907382ms",
+    "average_response_time": "86.699\u00b5s",
+    "average_response_time_sec": 8.6699e-05,
+    "count": 1,
+    "pid": 99894,
+    "status_code_count": {
+        "200": 1
+    },
+    "time": "2015-03-06 17:23:27.000677896 +0100 CET",
+    "total_count": 22,
+    "total_response_time_sec": 0.0019073820000000002,
+    "total_status_code_count": {
+        "200": 22
+    },
+    "unixtime": 1425659007,
+    "uptime": "4m14.502271612s",
+    "uptime_sec": 254.502271612
+}
+
+*/
+
 type (
 	Stats struct {
 		Uptime         time.Time      `json:"uptime"`
