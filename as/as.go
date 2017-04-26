@@ -200,6 +200,28 @@ func Convert(value interface{}, t reflect.Kind) (interface{}, error) {
 	return nil, fmt.Errorf("Could not convert %s into %s.", reflect.TypeOf(value).Kind(), t)
 }
 
+func ToStringSlice(valuea ...interface{}) []string {
+	value := valuea[0]
+	var response []string
+
+	switch v := value.(type) {
+	case []interface{}:
+		for _, u := range v {
+			response = append(response, ToString(u))
+		}
+		return response
+	case []string:
+		return v
+	case string:
+		return strings.Fields(v)
+	case interface{}:
+		str := ToString(v)
+		return []string{str}
+	default:
+		return response
+	}
+}
+
 func ToStringMapString(valuea ...interface{}) map[string]string {
 	value := valuea[0]
 

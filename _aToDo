@@ -3,3 +3,9 @@ TODO
 - Times
 - as
 - cron
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+! WARNING: keep_rollin was probably updated,
+! Check and update .keep_rollinrc as necessary
+! and remove the last "deprecated" paragraph to disable this message!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
