@@ -22,3 +22,6 @@
 [submodule "hermes"]
 	path = hermes
 	url = https://github.com/matcornic/hermes
+[submodule "astilectron"]
+	path = astilectron
+	url = https://github.com/asticode/go-astilectron
