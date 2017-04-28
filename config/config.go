@@ -92,18 +92,19 @@ func (c *Config) Reset() {
 // FILES
 /////////////////////////////////////////////////////
 func ReadFiles(files ...string) { cfg.ReadFiles(files...) }
-func (c *Config) ReadFiles(files ...string) {
+func (c *Config) ReadFiles(files ...string) error {
 	for _, file := range files {
 		tmp := new(Config)
 		tmp.keyDelim = c.keyDelim
 		err := tmp.readFile(file)
 		if err != nil {
-			fmt.Printf("Cannot read config file [%s]: %s\n", file, err.Error())
+			return err
 		} else {
 			c.configFiles = append(c.configFiles, file)
 			c.merge(tmp.data)
 		}
 	}
+	return nil
 }
 
 func (c *Config) GetConfigFiles() []string {
