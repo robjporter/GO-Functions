@@ -894,3 +894,19 @@ func IsNillable(input interface{}) bool {
 		return false
 	}
 }
+
+func ToMapInterfaceFromMapString(src map[string]string) map[string]interface{} {
+	ret := map[string]interface{}{}
+	for k, v := range src {
+		ret[k] = v
+	}
+	return ret
+}
+
+func ToMapStringFromMapInterface(src map[interface{}]interface{}) map[string]interface{} {
+	tgt := map[string]interface{}{}
+	for k, v := range src {
+		tgt[fmt.Sprintf("%v", k)] = v
+	}
+	return tgt
+}

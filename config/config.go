@@ -77,6 +77,12 @@ func (c *Config) Get(key string) interface{} {
 /////////////////////////////////////////////////////
 // SET
 /////////////////////////////////////////////////////
+func (c *Config) Set(key string, value interface{}) {
+	path := strings.Split(key, c.keyDelim)
+	lastKey := strings.ToLower(path[len(path)-1])
+	deepestMap := deepSearch(c.override, path[0:len(path)-1])
+	deepestMap[lastKey] = value
+}
 
 /////////////////////////////////////////////////////
 // RESET
