@@ -2,318 +2,351 @@ package config
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"os"
+	"reflect"
 	"strconv"
 	"strings"
-	"sync"
-	"time"
 
 	"github.com/robjporter/go-functions/as"
 	"github.com/robjporter/go-functions/yaml"
 )
 
+type Config struct {
+	root interface{}
+}
+
+/////////////////////////////////////////////////////
+// CONSTRUCTOR
+/////////////////////////////////////////////////////
 var cfg = New()
 
-type Config struct {
-	data        map[string]interface{}
-	keyDelim    string
-	configFiles []string
-	mutex       sync.Mutex
-}
-
 func New() *Config {
-	return &Config{
-		data:     make(map[string]interface{}),
-		keyDelim: ".",
+	return &Config{root: make(map[interface{}]interface{})}
+}
+
+/////////////////////////////////////////////////////
+// PUBLIC KEYS
+/////////////////////////////////////////////////////
+func GetKeys() ([]string, error) { return cfg.GetKeys() }
+func (cfg *Config) GetKeys() ([]string, error) {
+	var keys []string
+	tmp := cfg.AllSettings()
+	for k := range tmp {
+		keys = append(keys, k)
 	}
+	return keys, nil
 }
 
 /////////////////////////////////////////////////////
-// GET
+// PUBLIC SIZE
 /////////////////////////////////////////////////////
-func (c *Config) GetString(key string) string {
-	return as.ToString(c.Get(key))
-}
-
-func (c *Config) GetBool(key string) bool {
-	return as.ToBool(c.Get(key))
-}
-
-func (c *Config) GetInt(key string) int {
-	return as.ToInt(c.Get(key))
-}
-
-func (c *Config) GetFloat(key string) float64 {
-	return as.ToFloat(c.Get(key))
-}
-
-func (c *Config) GetTime(key string) time.Time {
-	return as.ToTime(c.Get(key))
-}
-
-func (c *Config) GetStringSlice(key string) []string {
-	return as.ToStringSlice(c.Get(key))
-}
-
-func (c *Config) GetStringMap(key string) map[string]interface{} {
-	return as.ToStringMap(c.Get(key))
-}
-
-func (c *Config) GetStringMapString(key string) map[string]string {
-	return as.ToStringMapString(c.Get(key))
-}
-
-func (c *Config) Get(key string) interface{} {
-	lkey := strings.ToLower(key)
-	val := c.find(lkey)
-	if val == nil {
-		return nil
+func Size() (int, error) { return cfg.Size() }
+func (cfg *Config) Size() (int, error) {
+	var keys []string
+	tmp := cfg.AllSettings()
+	for k := range tmp {
+		keys = append(keys, k)
 	}
-	return val
+	return len(keys), nil
 }
 
 /////////////////////////////////////////////////////
-// SET
-/////////////////////////////////////////////////////
-func (c *Config) Set(key string, value interface{}) {
-	path := strings.Split(key, c.keyDelim)
-	lastKey := strings.ToLower(path[len(path)-1])
-	deepestMap := deepSearch(c.override, path[0:len(path)-1])
-	deepestMap[lastKey] = value
-}
-
-/////////////////////////////////////////////////////
-// RESET
-/////////////////////////////////////////////////////
-func (c *Config) Reset() {
-	c.data = nil
-	c.data = make(map[string]interface{})
-	c.configFiles = []string{}
-	c.keyDelim = "."
-}
-
-/////////////////////////////////////////////////////
-// FILES
+// PUBLIC READ FILES
 /////////////////////////////////////////////////////
 func ReadFiles(files ...string) { cfg.ReadFiles(files...) }
-func (c *Config) ReadFiles(files ...string) error {
+func (cfg *Config) ReadFiles(files ...string) {
 	for _, file := range files {
 		tmp := new(Config)
-		tmp.keyDelim = c.keyDelim
 		err := tmp.readFile(file)
 		if err != nil {
-			return err
+			fmt.Printf("Cannot read config file [%s]: %s\n",
+				file, err.Error())
 		} else {
-			c.configFiles = append(c.configFiles, file)
-			c.merge(tmp.data)
+			merge(&cfg.root, &tmp.root)
 		}
 	}
-	return nil
-}
-
-func (c *Config) GetConfigFiles() []string {
-	return c.configFiles
 }
 
 /////////////////////////////////////////////////////
-// STRING
+// PUBLIC READ STRING
 /////////////////////////////////////////////////////
-func ReadString(data string) { cfg.ReadString(data) }
-func (c *Config) ReadString(data string) {
+func (cfg *Config) ReadString(config string) error {
 	tmp := new(Config)
-	err := tmp.readBuffer(as.ToBytes(data))
-	if err != nil {
-		fmt.Printf("Cannot read config data [%s]: %s\n", data, err.Error())
+	err := tmp.readBuffer(as.ToBytes(config))
+	if err == nil {
+		merge(&cfg.root, &tmp.root)
+		return nil
 	} else {
-		c.merge(tmp.data)
+		return err
 	}
 }
 
 /////////////////////////////////////////////////////
-// OUTPUT
+// INTERNAL SUPPORTING READ
 /////////////////////////////////////////////////////
-func AllSettings() map[string]interface{} { return cfg.AllSettings() }
-func (c *Config) AllSettings() map[string]interface{} {
-	c.mutex.Lock()
-	defer c.mutex.Unlock()
-	allSettings := map[string]interface{}{}
-	list(&allSettings, "", c.data)
-	return allSettings
+func (cfg *Config) readBuffer(buff []byte) error {
+	return yaml.Unmarshal(buff, &cfg.root)
 }
 
-func (c *Config) SaveYaml(filename string) {
-	out, err := yaml.Marshal(c.AllSettings())
-	if err == nil {
-		fp, err := os.Create(filename)
-		if err == nil {
-			defer fp.Close()
-			_, err = fp.Write(out)
-		}
-	}
-}
-
-func (c *Config) SaveJson(filename string) {
-	out, err := json.Marshal(c.AllSettings())
-	if err == nil {
-		fp, err := os.Create(filename)
-		if err == nil {
-			defer fp.Close()
-			_, err = fp.Write(out)
-		}
-	}
-}
-
-/////////////////////////////////////////////////////
-// INTERNAL
-/////////////////////////////////////////////////////
-func (c *Config) find(key string) interface{} {
-	path := strings.Split(key, c.keyDelim)
-
-	val := c.searchMap(c.data, path)
-	if val != nil {
-		return val
-	}
-	return nil
-}
-
-func (c *Config) searchMap(source map[string]interface{}, path []string) interface{} {
-	var next interface{}
-	var ok bool
-
-	if len(path) == 0 {
-		return source
-	}
-
-	next, ok = source[path[0]]
-	if ok {
-		if len(path) == 1 {
-			return next
-		}
-		switch next.(type) {
-		case []interface{}:
-			if len(path[1:]) > 0 {
-				if _, err := strconv.Atoi(path[1:][0]); err == nil {
-					tmp := as.ToSlice(next)
-					p := as.ToInt(path[1:])
-					return c.searchMap(as.ToStringMap(tmp[p]), path[2:])
-				}
-			} else {
-				return c.searchMap(as.ToStringMap(next), path[1:])
-			}
-		case map[interface{}]interface{}:
-			return c.searchMap(as.ToStringMap(next), path[1:])
-		case map[string]interface{}:
-			return c.searchMap(next.(map[string]interface{}), path[1:])
-		default:
-			return nil
-		}
-	}
-	return nil
-}
-
-func (c *Config) searchMapWithPath(config map[string]interface{}, path []string) interface{} {
-	if len(path) == 0 {
-		return config
-	}
-	for i := len(path); i > 0; i-- {
-		prefixKey := strings.ToLower(strings.Join(path[0:i], c.keyDelim))
-		prefixKey = strings.TrimSpace(prefixKey)
-		next, ok := c.data[prefixKey]
-		if ok {
-			if i == len(path) {
-				return next
-			}
-			var val interface{}
-			switch next.(type) {
-			case map[interface{}]interface{}:
-				val = c.searchMapWithPath(as.ToStringMap(next), path[i:])
-			case map[string]interface{}:
-				val = c.searchMapWithPath(next.(map[string]interface{}), path[i:])
-			default:
-			}
-			if val != nil {
-				return val
-			}
-		}
-	}
-	return nil
-}
-
-func (c *Config) isPathShadowedInDeepMap(config map[string]interface{}, path []string) interface{} {
-	return nil
-}
-
-func (c *Config) readBuffer(buff []byte) error {
-	return yaml.Unmarshal(buff, &c.data)
-}
-
-func (c *Config) readFile(filename string) error {
-	buff, err := ioutil.ReadFile(filename)
+func (cfg *Config) readFile(file string) error {
+	buff, err := ioutil.ReadFile(file)
 	if err != nil {
 		return err
 	}
-
-	return c.readBuffer(buff)
+	return cfg.readBuffer(buff)
 }
 
-func castToMapStringInterface(src map[interface{}]interface{}) map[string]interface{} {
-	tgt := map[string]interface{}{}
-	for k, v := range src {
-		tgt[fmt.Sprintf("%v", k)] = v
+func (cfg *Config) readEnv(prefix string) error {
+	return nil
+}
+
+/////////////////////////////////////////////////////
+// PUBLIC SUB
+/////////////////////////////////////////////////////
+func Sub(path string) *Config { return cfg.Sub(path) }
+func (cfg *Config) Sub(path string) *Config {
+	data, err := cfg.Get(path)
+	if err != nil {
+		fmt.Printf("Failed to get %s\n", path)
+		return nil
 	}
-	return tgt
+
+	ncfg := Config{}
+	ncfg.root = data
+	return &ncfg
 }
 
-func (c *Config) merge(src map[string]interface{}) {
-	for sourceKey, sourceValue := range src {
-		targetKey := keyExists(sourceKey, c.data)
-		if targetKey == "" {
-			c.data[sourceKey] = sourceValue
-		}
-		targetValue, ok := c.data[targetKey]
+/////////////////////////////////////////////////////
+// PUBLIC GET
+/////////////////////////////////////////////////////
+func Get(path string) (interface{}, error) { return cfg.Get(path) }
+func (cfg *Config) Get(path string) (interface{}, error) {
+	val, err := get(path, cfg.root)
+	if err != nil {
+		fmt.Printf("Failed to get path: %s\n", path)
+		fmt.Printf("%s\n", err.Error())
+	}
+	return val, err
+}
+
+func GetSlice(path string) ([]interface{}, error) { return cfg.GetSlice(path) }
+func (cfg *Config) GetSlice(path string) ([]interface{}, error) {
+	tmp, err := cfg.Get(path)
+	if err == nil {
+		return tmp.([]interface{}), nil
+	} else {
+		return nil, err
+	}
+}
+
+func GetSliceSize(path string) (int, error) { return cfg.GetSliceSize(path) }
+func (cfg *Config) GetSliceSize(path string) (int, error) {
+	tmp, err := cfg.Get(path)
+	if err == nil {
+		return len(tmp.([]interface{})), nil
+	} else {
+		return -1, err
+	}
+}
+
+func GetStringMapSliceElement(element interface{}) (map[string]string, error) {
+	return cfg.GetStringMapSliceElement(element)
+}
+func (cfg *Config) GetStringMapSliceElement(element interface{}) (map[string]string, error) {
+	return element.(map[string]string), nil
+}
+
+func GetInterfaceMapSliceElement(element interface{}) (map[interface{}]interface{}, error) {
+	return cfg.GetInterfaceMapSliceElement(element)
+}
+func (cfg *Config) GetInterfaceMapSliceElement(element interface{}) (map[interface{}]interface{}, error) {
+	return element.(map[interface{}]interface{}), nil
+}
+
+func GetString(path string) string { return cfg.GetString(path) }
+func (cfg *Config) GetString(path string) string {
+	val, err := cfg.Get(path)
+	if err != nil {
+		return ""
+	} else {
+		str, ok := val.(string)
 		if !ok {
-			c.data[sourceKey] = sourceValue
-		}
-
-		sourceValueType := as.OfType(sourceValue)
-		targetValueType := as.OfType(targetValue)
-		if sourceValueType != targetValueType {
-			continue
-		}
-
-		switch ttv := targetValue.(type) {
-		case map[interface{}]interface{}:
-			stv := castToMapStringInterface(ttv)
-			c.merge(stv)
-		case map[string]interface{}:
-			c.merge(sourceValue.(map[string]interface{}))
-		default:
-			c.data[targetKey] = sourceValue
+			return ""
+		} else {
+			return str
 		}
 	}
 }
 
-func keyExists(k string, m map[string]interface{}) string {
-	lk := strings.ToLower(k)
-	for mk := range m {
-		lmk := strings.ToLower(mk)
-		if lmk == lk {
-			return mk
+func GetInt(path string) int { return cfg.GetInt(path) }
+func (cfg *Config) GetInt(path string) int {
+	val, err := cfg.Get(path)
+	if err != nil {
+		return 0
+	} else {
+		num, ok := val.(int)
+		if !ok {
+			return 0
+		} else {
+			return num
 		}
 	}
-	return ""
 }
 
-func (c *Config) IsSet(key string) bool {
-	lkey := strings.ToLower(key)
-	val := c.find(lkey)
-	return val != nil
+func GetBool(path string) bool { return cfg.GetBool(path) }
+func (cfg *Config) GetBool(path string) bool {
+	val, err := cfg.Get(path)
+	if err != nil {
+		fmt.Printf("No such value")
+		return false
+	} else {
+		b, ok := val.(bool)
+		if !ok {
+			fmt.Printf("Mismatched type")
+			return false
+		} else {
+			return b
+		}
+	}
+}
+
+func GetFloat(path string) float64 { return cfg.GetFloat(path) }
+func (cfg *Config) GetFloat(path string) float64 {
+	val, err := cfg.Get(path)
+	if err != nil {
+		fmt.Printf("No such value")
+		return float64(-1)
+	} else {
+		b, ok := val.(float64)
+		if !ok {
+			fmt.Printf("Mismatched type")
+			return float64(-1)
+		} else {
+			return b
+		}
+	}
+}
+
+/////////////////////////////////////////////////////
+// PUBLIC SET
+/////////////////////////////////////////////////////
+func Set(path string, value interface{}) { cfg.Set(path, value) }
+func (cfg *Config) Set(path string, value interface{}) {
+	data := build(path, value)
+	merge(&cfg.root, &data)
+}
+
+/////////////////////////////////////////////////////
+// PUBLIC OUTPUT
+/////////////////////////////////////////////////////
+func AllSettings() map[string]interface{} { return cfg.AllSettings() }
+func (cfg *Config) AllSettings() map[string]interface{} {
+	all_settings := map[string]interface{}{}
+	list(&all_settings, "", cfg.root)
+	return all_settings
+}
+
+/////////////////////////////////////////////////////
+// PUBLIC SIZE
+/////////////////////////////////////////////////////
+func (cfg *Config) Len() int {
+	all_settings := cfg.AllSettings()
+	return len(all_settings)
+}
+
+/////////////////////////////////////////////////////
+// PUBLIC ENVIRONMENT
+/////////////////////////////////////////////////////
+func BindEnvs(prefix string) {
+	prefix = prefix + "_"
+	for _, line := range os.Environ() {
+		name := strings.Split(line, "=")[0]
+		value := strings.Join(strings.Split(line, "=")[1:], "=")
+		if strings.HasPrefix(name, prefix) {
+			key := strings.TrimPrefix(name, prefix)
+			key = strings.ToLower(key)
+			key = strings.Replace(key, "_", ".", -1)
+			Set(key, guess(value))
+		}
+	}
+}
+
+/////////////////////////////////////////////////////
+// PRIVATE
+/////////////////////////////////////////////////////
+func merge(dst, src *interface{}) {
+	src_kind := reflect.TypeOf(*src).Kind()
+	dst_kind := reflect.TypeOf(*dst).Kind()
+
+	if dst_kind != src_kind {
+		*dst = *src
+	}
+
+	switch src_kind {
+	case reflect.Int, reflect.String, reflect.Bool:
+		*dst = *src
+	case reflect.Map:
+		src_map, ok := (*src).(map[interface{}]interface{})
+		if !ok {
+			fmt.Printf("Failed to convert src data to map: %v\n", src)
+		}
+		dst_map, ok2 := (*dst).(map[interface{}]interface{})
+		if !ok2 {
+			fmt.Printf("Failed to convert dst data to map: %v\n", dst)
+		}
+
+		for k, src_v := range src_map {
+			dst_v, ok3 := dst_map[k]
+			if ok3 {
+				merge(&dst_v, &src_v)
+				dst_map[k] = dst_v
+			} else {
+				dst_map[k] = src_v
+			}
+		}
+	default:
+		fmt.Printf("Unknown type kind: %s\n", src_kind.String())
+	}
+}
+
+func get(path string, data interface{}) (interface{}, error) {
+	if path == "" {
+		return data, nil
+	}
+	segs := strings.Split(path, ".")
+	seg := segs[0]
+	data_map, ok := data.(map[interface{}]interface{})
+	if !ok {
+		return nil, errors.New("Mismatched type")
+	}
+
+	val, ok2 := data_map[seg]
+	if !ok2 {
+		return nil, errors.New("No such key")
+	}
+
+	return get(strings.Join(segs[1:], "."), val)
+
+}
+
+func build(path string, value interface{}) interface{} {
+	if path == "" {
+		return value
+	}
+
+	segs := strings.Split(path, ".")
+	seg := segs[len(segs)-1]
+
+	data := make(map[interface{}]interface{})
+	data[seg] = value
+	return build(strings.Join(segs[0:len(segs)-1], "."), data)
 }
 
 func list(result *map[string]interface{}, prefix string, data interface{}) {
-	m, ok := data.(map[string]interface{})
+	m, ok := data.(map[interface{}]interface{})
 	if ok {
 		for key, value := range m {
 			nprefix := ""
@@ -322,54 +355,71 @@ func list(result *map[string]interface{}, prefix string, data interface{}) {
 			} else {
 				nprefix = fmt.Sprintf("%s.%s", prefix, key)
 			}
-			if value != "#EMPTYVALUE#" {
-				list(result, nprefix, value)
-			}
+			list(result, nprefix, value)
 		}
 	} else {
 		(*result)[prefix] = data
 	}
 }
 
-func (c *Config) GetKeys() []string {
-	m := map[string]bool{}
-	m = c.flattenAndMergeMap(m, c.data, "")
-
-	// convert set of paths to list
-	a := []string{}
-	for x := range m {
-		a = append(a, x)
+func guess(str string) interface{} {
+	nv, err := strconv.Atoi(str)
+	if err == nil {
+		return nv
 	}
-	return a
+
+	bstr := strings.ToLower(str)
+	if bstr == "true" {
+		return true
+	} else if bstr == "false" {
+		return false
+	}
+
+	return str
 }
 
-func (c *Config) flattenAndMergeMap(shadow map[string]bool, m map[string]interface{}, prefix string) map[string]bool {
-	if shadow != nil && prefix != "" && shadow[prefix] {
-		// prefix is shadowed => nothing more to flatten
-		return shadow
-	}
-	if shadow == nil {
-		shadow = make(map[string]bool)
-	}
-
-	var m2 map[string]interface{}
-	if prefix != "" {
-		prefix += c.keyDelim
-	}
-	for k, val := range m {
-		fullKey := prefix + k
-		switch val.(type) {
-		case map[string]interface{}:
-			m2 = val.(map[string]interface{})
-		case map[interface{}]interface{}:
-			m2 = as.ToStringMap(val)
-		default:
-			// immediate value
-			shadow[strings.ToLower(fullKey)] = true
-			continue
+/////////////////////////////////////////////////////
+// WRITE OUT
+/////////////////////////////////////////////////////
+func (cfg *Config) WriteYaml(filename string) error {
+	out, err := yaml.Marshal(cfg.root)
+	if err == nil {
+		fp, err := os.Create(filename)
+		if err == nil {
+			defer fp.Close()
+			_, err = fp.Write(out)
 		}
-		// recursively merge to shadow map
-		shadow = c.flattenAndMergeMap(shadow, m2, fullKey)
+		return nil
+	} else {
+		return err
 	}
-	return shadow
+}
+
+func (cfg *Config) WriteJson(filename string) error {
+	out, err := json.Marshal(convert(cfg.root))
+	fp, err := os.Create(filename)
+	if err == nil {
+		defer fp.Close()
+		_, err = fp.Write(out)
+	}
+	return nil
+}
+
+/////////////////////////////////////////////////////
+// UNUSED
+/////////////////////////////////////////////////////
+func convert(i interface{}) interface{} {
+	switch x := i.(type) {
+	case map[interface{}]interface{}:
+		m2 := map[string]interface{}{}
+		for k, v := range x {
+			m2[k.(string)] = convert(v)
+		}
+		return m2
+	case []interface{}:
+		for i, v := range x {
+			x[i] = convert(v)
+		}
+	}
+	return i
 }

@@ -3,28 +3,23 @@ package main
 import (
 	"fmt"
 
-	"./config"
+	"../config"
 )
 
 func main() {
 	cfg := config.New()
-	cfg.ReadFiles("./config.yaml", "./conf.json")
+	//cfg.ReadFiles("./config.yaml", "./conf.json")
 	data := `{"menu": {"id": "file","value": "File","popup": {"menuitem": [{"value": "New", "onclick": "CreateNewDoc()"},{"value": "Open", "onclick": "OpenDoc()"},{"value": "Close", "onclick": "CloseDoc()"}]}}}`
 	cfg.ReadString(data)
-	//cfg.SaveYaml("test.yaml")
-	//fmt.Println("FILES: >", cfg.GetConfigFiles())
-	//fmt.Println(cfg.AllSettings())
-	fmt.Println("VALUE: >", cfg.Get("menu.popup.menuitem.0.onclick"))
-	fmt.Println("VALUE: >", cfg.Get("ucs.systems.0.url"))
 
-	//fmt.Println(cfg.GetString("menu.id"))
-	//fmt.Println(cfg.GetString("output.file"))
-	//fmt.Println("GET************************************")
-	//fmt.Println("UCS: >", cfg.Get("ucs"))
-	//fmt.Println("")
-	//fmt.Println("SYSTEMS: >", cfg.Get("ucs.systems"))
-	//fmt.Println("")
-	//fmt.Println("ELEMENT: >", cfg.Get("ucs.systems.0"))
-	//fmt.Println("")
-	//fmt.Println("ELEMENT: >", cfg.GetString("ucs.systems.0.url"))
+	if size, _ := cfg.GetSliceSize("menu.popup.menuitem"); size > 0 {
+		tmp2, err := cfg.GetSlice("menu.popup.menuitem")
+		if err == nil {
+			for i := 0; i < len(tmp2); i++ {
+				fmt.Println(tmp2[i])
+				tmp3, _ := cfg.GetInterfaceMapSliceElement(tmp2[i])
+				fmt.Println(tmp3["value"])
+			}
+		}
+	}
 }
